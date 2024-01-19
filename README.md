@@ -54,10 +54,6 @@ Include screenshots of the application to give users a visual preview of how the
 
 If you would like to contribute to this project, please open an issue or submit a pull request. We welcome contributions and feedback.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgments
 
 - **Tkinter:** Thanks to the Tkinter library for providing the tools to create the graphical user interface.
