@@ -19,9 +19,13 @@ Before running the application, make sure to set up your environment by followin
     ```
 
 2. **Install Dependencies:** Make sure to install the required Python packages. You can install them using the following command:
-
+    1. Windows:
     ```bash
     pip install -r requirements.txt
+    ```
+    2. Linux/Mac:
+    ```bash
+    pip3 install -r requirements.txt
     ```
 
 ## How to Run
@@ -29,19 +33,23 @@ Before running the application, make sure to set up your environment by followin
 1. Clone this repository to your local machine:
 
     ```bash
-    git clone https://github.com/your-username/weather-app.git
+    git clone https://github.com/kraven000/Tkinter-Weather-GUI.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd weather-app
+    cd Tkinter-Weather-GUI
     ```
 
 3. Run the application:
-
+    1. Windows:
     ```bash
-    python weather_app.py
+    python main.py
+    ```
+    2. Linux/Mac:
+    ```bash
+    python3 main.py
     ```
 
 4. The Tkinter window will appear, allowing you to interact with the weather application.
