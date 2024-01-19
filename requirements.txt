@@ -1,0 +1,5 @@
+simplejson==3.19.2
+tk==0.1.0
+urllib
+urllib3==1.26.18
+python-dotenv==1.0.0
