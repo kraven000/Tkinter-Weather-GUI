@@ -3,11 +3,11 @@ from time import strftime
 from requests import get
 from os import getenv
 from dotenv import load_dotenv
-from memory_profiler import memory_usage
-from time import perf_counter
+
 
 load_dotenv()
 time = strftime("%I:%M %p")
+
 
 def weather(events=None):
     if len(store_area.get()) != 0:
@@ -207,10 +207,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    start = perf_counter()
-    a = memory_usage(main)
-    end = perf_counter()
-    print("Runtime:- ",(end-start)+1)
-    print("Memory Usage:- ",sum(a)/len(a))
-    # print(sum(memory_usage(main))
+    main()
