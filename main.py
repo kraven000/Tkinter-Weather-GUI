@@ -219,8 +219,8 @@ def main():
 
 if __name__=="__main__":
     try:
-        with open("account.json") as f:
-            api_key = loads(f.read())["api_key"]
+        with open("account.json","r") as f:
+            api_key = loads(f.read())
             main()
         
         
