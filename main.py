@@ -4,7 +4,7 @@ from requests import get
 from json import loads,dumps
 from pytz import timezone
 from datetime import datetime
-from webbrowser import open
+
 
 
 def weather(events=None):
@@ -220,11 +220,10 @@ def main():
 if __name__=="__main__":
     try:
         with open("account.json","r") as f:
-            api_key = loads(f.read())
             main()
         
         
-    except:
+    except FileNotFoundError:
         
         def account_email():
             
@@ -273,7 +272,8 @@ if __name__=="__main__":
             
             def open_website():
                 '''A function to open website'''
-                open("https://www.weatherapi.com/")
+                import webbrowser
+                webbrowser.open("https://www.weatherapi.com/")
                 
                 
             # clickable link button
