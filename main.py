@@ -17,7 +17,7 @@ def weather(events=None):
             location = location.replace(" ", "%20")
             
             # json file of weather
-            url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=no").json()
+            url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=yes").json()
             del location
             
             
@@ -33,11 +33,14 @@ def weather(events=None):
             # degree symbol
             degree_symbol = u"\u00b0"
             
+            
             # changing location and region
             location_city_region.config(text=f"""{url_response["location"]["name"]}, {url_response["location"]["region"]}, {url_response["location"]["country"]}""")
             
+            
             # adding weather in degree celsius
             weather_show.config(text=f"""{url_response["current"]["temp_c"]}{degree_symbol}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
+            
             
             # adding condition            
             weather_condition.config(text=f"""{url_response["current"]["condition"]["text"]}|Feels Like:- {url_response["current"]["feelslike_c"]}{degree_symbol}C""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
@@ -64,6 +67,32 @@ def weather(events=None):
             condition.config(text=f"""{weather_condition_for_bluerect}""",bg="#0066CC",fg="#202020",font="default 16 bold")
             
             del weather_condition_for_bluerect
+            
+            air_quality = url_response["current"]["air_quality"]
+            if air_quality["gb-defra-index"]>=1 and air_quality["gb-defra-index"]<4:
+                background_color = "#80FF00"
+                quality.config(text="Quality:- Low",bg=background_color)
+            elif air_quality["gb-defra-index"]>=4 and air_quality["gb-defra-index"]<7:
+                background_color = "#F2D414"
+                quality.config(text="Quality:- Moderate",bg=background_color)
+            elif air_quality["gb-defra-index"]>=7 and air_quality["gb-defra-index"]<10:
+                background_color = "#CC0000"
+                quality.config(text="Quality:- High",bg=background_color)
+            elif air_quality["gb-defra-index"]==10:
+                background_color = "#99004C"
+                quality.config(text="Quality:- Very High",bg=background_color)
+            
+            
+            air_quality_frame.config(bg=background_color)
+            aqi_co.config(text=f"""CO:- {air_quality["co"]}""",bg=background_color)
+            aqi_no2.config(text=f"""NO2:- {air_quality["no2"]}""",bg=background_color)
+            aqi_o3.config(text=f"""O3:- {air_quality["o3"]}""",bg=background_color)
+            aqi_so2.config(text=f"""SO2:- {air_quality["so2"]}""",bg=background_color)
+            aqi_pm2_5.config(text=f"""PM 2.5:- {air_quality["pm2_5"]}""",bg=background_color)
+            aqi_pm10.config(text=f"""PM 10:- {air_quality["pm10"]}""",bg=background_color)
+            aqi_gb_defra_index.config(text=f"""GB Defra Index:- {air_quality["gb-defra-index"]}""",bg=background_color)
+            
+            del air_quality
             return url_response
         
         except KeyError:
@@ -78,7 +107,7 @@ def weather(events=None):
         location = location["loc"]
         
         # weather
-        url = get(f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=no").json()
+        url = get(f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=yes").json()
         del location
         return url
 
@@ -125,7 +154,7 @@ def fahrenhiet():
 
 def main():
     
-    global time_text, current_weather_text, weather_show, store_area, weather_condition, detailed_desc, windspeed, condition, pressure, humidity, celsius_fahrenhiet_button, weather_show,location_city_region
+    global time_text, current_weather_text, weather_show, store_area, weather_condition, detailed_desc, windspeed, condition, pressure, humidity, celsius_fahrenhiet_button, weather_show,location_city_region,air_quality_frame,aqi_co,aqi_no2,aqi_o3,aqi_pm2_5,aqi_pm10,aqi_gb_defra_index,aqi_so2,quality
     
     
     # root.iconphoto(True,icon)
@@ -152,7 +181,6 @@ def main():
     entry_widget.focus()
     
     # i am declaring default response as global to avoid calling weather soo many time and only calling it one time
-    # default_response = Temp().response
     default_response = weather()
     
     
@@ -194,11 +222,11 @@ def main():
         celsius_fahrenhiet_button.place(x=705,y=110)
     
     
+    # short description
     # Frame for Background
-    frame = Frame(root,bg="#0066CC",width=1300,height=120)
-    frame.place(x=-10,y=390)
+    Frame(root,bg="#0066CC",width=1300,height=120).place(x=-10,y=390)
     
-    # To show Wind Speed, HUmidity, Description and Pressure
+    # To show Wind Speed, Humidity, Description and Pressure
     Label(root,text="WIND SPEED                  HUMIDITY                  DESCRIPTION                            PRESSURE",font="Default 18 bold",fg="#FFFFFF",bg="#0066CC",border=0,borderwidth=0).place(x=0,y=400)
     
     windspeed = Label(root,text=f"""{default_response["current"]["wind_kph"]} km/hr""",bg="#0066CC",fg="#202020",font="default 16 bold")
@@ -212,6 +240,57 @@ def main():
     
     pressure = Label(root,text=f"""{default_response["current"]["pressure_mb"]} mb""",bg="#0066CC",fg="#202020",font="default 16 bold")
     pressure.place(x=1000,y=450)
+    
+    
+    # To show air quality
+    air_quality_index = default_response["current"]["air_quality"]["gb-defra-index"]
+    
+    background_color = None
+    quality = Label(root,text=f"Quality:- ",font="Roboto 14 bold")
+    if air_quality_index>=1 and air_quality_index<4:
+        background_color = "#80FF00"
+        quality.config(bg=background_color,text="Quality:- Low")
+        
+    elif air_quality_index>=4 and air_quality_index<7:
+        background_color = "#F2D414"
+        quality.config(bg=background_color,text="Quality:- Moderate")
+        
+    elif air_quality_index>=7 and air_quality_index<10:
+        background_color = "#CC0000"
+        quality.config(bg=background_color,text="Quality:- High")
+        
+    elif air_quality_index==10:
+        background_color = "#99004C"
+        quality.config(bg=background_color,text="Quality:- Very High")
+        
+    
+    
+    air_quality_frame = Frame(root,width=300,height=265,bg=background_color)
+    air_quality_frame.place(x=850,y=50)
+    
+    quality.place(x=852,y=260)
+    
+    aqi_co = Label(root,text=f"""CO:- {default_response["current"]["air_quality"]["co"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_co.place(x=852,y=50)
+    
+    aqi_no2 = Label(root,text=f"""NO2:- {default_response["current"]["air_quality"]["no2"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_no2.place(x=852,y=80)
+    
+    aqi_o3 = Label(root,text=f"""O3:- {default_response["current"]["air_quality"]["o3"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_o3.place(x=852,y=110)
+    
+    aqi_so2 = Label(root,text=f"""SO2:- {default_response["current"]["air_quality"]["so2"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_so2.place(x=852,y=140)
+    
+    aqi_pm2_5 = Label(root,text=f"""PM 2.5:- {default_response["current"]["air_quality"]["pm2_5"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_pm2_5.place(x=852,y=170)
+    
+    aqi_pm10 = Label(root,text=f"""PM 10:- {default_response["current"]["air_quality"]["pm10"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_pm10.place(x=852,y=200)
+    
+    aqi_gb_defra_index = Label(root,text=f"""GB Defra Index:- {default_response["current"]["air_quality"]["gb-defra-index"]}""",font="Roboto 14 bold",bg=background_color)
+    aqi_gb_defra_index.place(x=852,y=230)
+    
     
     
     root.mainloop()
