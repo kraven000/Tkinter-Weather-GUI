@@ -80,7 +80,7 @@ def weather(events=None):
                 quality.config(text="Quality:- High",bg=background_color)
             elif air_quality["gb-defra-index"]==10:
                 background_color = "#99004C"
-                quality.config(text="Quality:- Very High",bg=background_color)
+                quality.config(text="AQI:- Very High",bg=background_color)
             
             
             air_quality_frame.config(bg=background_color)
@@ -160,8 +160,8 @@ def main():
     # root.iconphoto(True,icon)
     root = Tk()
     root.title("Weather App")
-    root.geometry("1200x505")
-    root.resizable(True,False)
+    root.geometry("1220x505")
+    root.resizable(False,False)
     root.configure(bg="#101010")
     
     # Images
@@ -244,31 +244,29 @@ def main():
     
     # To show air quality
     air_quality_index = default_response["current"]["air_quality"]["gb-defra-index"]
-    
+    quality_text = None
     background_color = None
-    quality = Label(root,text=f"Quality:- ",font="Roboto 14 bold")
     if air_quality_index>=1 and air_quality_index<4:
         background_color = "#80FF00"
-        quality.config(bg=background_color,text="Quality:- Low")
+        quality_text = "AQI:- Low"
         
     elif air_quality_index>=4 and air_quality_index<7:
         background_color = "#F2D414"
-        quality.config(bg=background_color,text="Quality:- Moderate")
+        quality_text = "AQI:- Moderate"
         
     elif air_quality_index>=7 and air_quality_index<10:
         background_color = "#CC0000"
-        quality.config(bg=background_color,text="Quality:- High")
+        quality_text = "AQI:- High"
         
     elif air_quality_index==10:
         background_color = "#99004C"
-        quality.config(bg=background_color,text="Quality:- Very High")
+        quality_text = "AQI:- Very High"
         
     
     
     air_quality_frame = Frame(root,width=300,height=265,bg=background_color)
     air_quality_frame.place(x=850,y=50)
     
-    quality.place(x=852,y=260)
     
     aqi_co = Label(root,text=f"""CO:- {default_response["current"]["air_quality"]["co"]}""",font="Roboto 14 bold",bg=background_color)
     aqi_co.place(x=852,y=50)
@@ -291,7 +289,8 @@ def main():
     aqi_gb_defra_index = Label(root,text=f"""GB Defra Index:- {default_response["current"]["air_quality"]["gb-defra-index"]}""",font="Roboto 14 bold",bg=background_color)
     aqi_gb_defra_index.place(x=852,y=230)
     
-    
+    quality = Label(root,text=quality_text,bg=background_color,font="Roboto 14 bold")
+    quality.place(x=852,y=260)
     
     root.mainloop()
 
