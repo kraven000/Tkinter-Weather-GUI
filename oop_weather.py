@@ -16,6 +16,8 @@ class WeatherApp:
         except:
             pass
         
+        
+        self.response = self.default_location()
         self.degree_symbol = u"\u00b0"
         self.window = Tk()
         self.time_text = Label(font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
@@ -65,6 +67,7 @@ class WeatherApp:
                     #time with different timezones
                     time = datetime.now(timezone(url_response["location"]["tz_id"])).strftime("%I:%M %p")
                     
+                    self.celsius_fahrenhiet_button.place(x=710,y=100)
                     
                     # Adding time and 'Current Weather' text
                     self.time_text.config(text=f"{time} ")
@@ -78,7 +81,7 @@ class WeatherApp:
                     
                     
                     # adding condition            
-                    self.weather_condition.config(text=f"""Feels Like:- {url_response["current"]["feelslike_c"]}{self.degree_symbol}C""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
+                    self.weather_condition.config(text=f"""Feels Like:- {url_response['current']['condition']['text']}""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
                     
                     
                     # adding the details of bluebox
@@ -113,11 +116,12 @@ class WeatherApp:
                     self.aqi_gb_defra_index.config(text=f"""GB Defra Index:- {air_quality["gb-defra-index"]}""",bg=background_color)
                     
                     del air_quality
+                    self.response = url_response
                     return url_response
                 
                 except KeyError:
                     self.celsius_fahrenhiet_button.place_forget()
-                    self.weather_show.config(text="This Location doesn't Exist",font="Helvetica 30 bold")
+                    self.weather_show.config(text="This Location doesn't Exist",font="Helvetica 16 bold")
                     self.location_city_region.config(text="ERROR")
                     
             else:
@@ -126,33 +130,28 @@ class WeatherApp:
         except:
             self.default_location()
     
-    def temp(self):
-        with open("temp.json","r") as file:
-            return loads(file.read())
+    # def temp(self):
+    #     with open("temp.json","r") as file:
+    #         return loads(file.read())
     
     
     def celsius(self):
         '''The function to show weather in Degree Celsius if button is pressed'''
         
-        response = self.temp()
-        
         self.celsius_fahrenhiet_button.config(text=f"{self.degree_symbol}F",command=self.fahrenhiet)
-        self.weather_show.config(text=f"{response["current"]["temp_c"]}{self.degree_symbol}C /")
-        self.feels_like.config(text=f"{response['current']['feelslike_f']}")
+        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{self.degree_symbol}C /")
+        self.feels_like.config(text=f"{self.response['current']['feelslike_c']}{self.degree_symbol}C")
 
 
     def fahrenhiet(self):
         '''The function to show weather in Fahrenhiet when button is pressed'''
         
-        response = self.temp()
-        
         self.celsius_fahrenhiet_button.config(text=f"{self.degree_symbol}C",command=self.celsius)
-        self.weather_show.config(text=f"{response['current']['temp_f']}{self.degree_symbol}F /")
-        self.feels_like.config(text=f"{response['current']['feelslike_f']}")
+        self.weather_show.config(text=f"{self.response['current']['temp_f']}{self.degree_symbol}F /")
+        self.feels_like.config(text=f"{self.response['current']['feelslike_f']}{self.degree_symbol}F")
 
 
     def buildui(self):
-        response = self.temp()
         
         # root.iconphoto(True,icon)
         self.window.title("Weather App")
@@ -172,7 +171,7 @@ class WeatherApp:
         #entry widget
         entry_widget = Entry(self.window,textvariable=self.store_location,width=24,justify="center",background="#404040",foreground="#FFFFFF",border=0,font="Consolas 25 bold")
         entry_widget.place(x=10,y=10)
-        entry_widget.bind("<Return>",weather)
+        entry_widget.bind("<Return>",self.weather)
         entry_widget.focus()
         
         # i am declaring default response as global to avoid calling weather soo many time and only calling it one time
@@ -180,14 +179,14 @@ class WeatherApp:
         
         
         #button for search
-        Button(self.window,image=search_icon,bg="#101010",borderwidth=0,border=0,command=weather).place(x=450,y=6)
+        Button(self.window,image=search_icon,bg="#101010",borderwidth=0,border=0,command=self.weather).place(x=450,y=6)
         
         # current weather text to show after user press search button or enter
         current_weather_text = Label(self.window,text="Current Weather",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
         current_weather_text.place(x=6,y=60)
         
         # to show current time when press search button or enter
-        time = datetime.now(timezone(response["location"]["tz_id"])).strftime("%I:%M %p")
+        time = datetime.now(timezone(self.response["location"]["tz_id"])).strftime("%I:%M %p")
         self.time_text.place(x=6,y=100)
         self.time_text.config(text=time)
         
@@ -195,19 +194,19 @@ class WeatherApp:
         Label(image=location_icon,bg="#101010").place(x=510,y=6)
         
         self.location_city_region.place(x=560,y=12)
-        self.location_city_region.config(text=f"""{response["location"]["name"]}, {response["location"]["region"]}, {response["location"]["country"]}""")
+        self.location_city_region.config(text=f"""{self.response["location"]["name"]}, {self.response["location"]["region"]}, {self.response["location"]["country"]}""")
         
         # showing weather icon
         Label(self.window,image=weather_icon,bg="#101010").place(x=160,y=100)
         
         # showing weather
         self.weather_show.place(x=412,y=115)
-        self.weather_show.config(text=f"{response["current"]["temp_c"]}{self.degree_symbol}C /")
+        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{self.degree_symbol}C /")
         
         # showing condition
         
         self.weather_condition.place(x=422,y=200)
-        self.weather_condition.config(text=f"""Condition:- {response['current']['condition']['text']}""")
+        self.weather_condition.config(text=f"""Condition:- {self.response['current']['condition']['text']}""")
         
         # Button to switch between degree celsius and degree fahrenheit
         self.celsius_fahrenhiet_button.place(x=710,y=100)
@@ -219,21 +218,21 @@ class WeatherApp:
         # To show Wind Speed, Humidity, Description and Pressure
         Label(self.below_details,text="""WIND SPEED                                HUMIDITY                                FEELS LIKE                                PRESSURE""",font="Default 18 bold",fg="#FFFFFF",bg="#0066CC",border=0,borderwidth=0).place(x=10,y=10)
         
-        self.windspeed.config(text=f"""{response['current']['wind_kph']} km/hr""")
+        self.windspeed.config(text=f"""{self.response['current']['wind_kph']} km/hr""")
         self.windspeed.place(x=15,y=70)
         
-        self.humidity.config(text=f"""{response['current']['humidity']}%""")
+        self.humidity.config(text=f"""{self.response['current']['humidity']}%""")
         self.humidity.place(x=415,y=70)
         
-        self.feels_like.config(text=f"""{response['current']['feelslike_c']}""")
+        self.feels_like.config(text=f"""{self.response['current']['feelslike_c']}{self.degree_symbol}C""")
         self.feels_like.place(x=770,y=70)
         
-        self.pressure.config(text=f"""{response['current']['pressure_mb']} mb""")
+        self.pressure.config(text=f"""{self.response['current']['pressure_mb']} mb""")
         self.pressure.place(x=1110,y=70)
         
         
         # To show air quality
-        air_quality_index = response["current"]["air_quality"]["gb-defra-index"]
+        air_quality_index = self.response["current"]["air_quality"]["gb-defra-index"]
         quality_text = None
         background_color = None
         if air_quality_index>=1 and air_quality_index<4:
@@ -257,27 +256,27 @@ class WeatherApp:
         self.air_quality_frame.place(x=850,y=50)
         
         
-        self.aqi_co.config(text=f"""CO:- {response["current"]["air_quality"]["co"]}""",bg=background_color)
+        self.aqi_co.config(text=f"""CO:- {self.response["current"]["air_quality"]["co"]}""",bg=background_color)
         self.aqi_co.place(x=0,y=5)
         
-        self.aqi_no2.config(text=f"""NO2:- {response["current"]["air_quality"]["no2"]}""",bg=background_color)
+        self.aqi_no2.config(text=f"""NO2:- {self.response["current"]["air_quality"]["no2"]}""",bg=background_color)
         self.aqi_no2.place(x=0,y=38)
         
         
         self.aqi_o3.place(x=0,y=71)
-        self.aqi_o3.config(text=f"""O3:- {response["current"]["air_quality"]["o3"]}""",bg=background_color)
+        self.aqi_o3.config(text=f"""O3:- {self.response["current"]["air_quality"]["o3"]}""",bg=background_color)
         
         self.aqi_so2.place(x=0,y=104)
-        self.aqi_so2.config(text=f"""SO2:- {response["current"]["air_quality"]["so2"]}""",bg=background_color)
+        self.aqi_so2.config(text=f"""SO2:- {self.response["current"]["air_quality"]["so2"]}""",bg=background_color)
         
         self.aqi_pm2_5.place(x=0,y=137)
-        self.aqi_pm2_5.config(text=f"""PM 2.5:- {response["current"]["air_quality"]["pm2_5"]}""",bg=background_color)
+        self.aqi_pm2_5.config(text=f"""PM 2.5:- {self.response["current"]["air_quality"]["pm2_5"]}""",bg=background_color)
         
         self.aqi_pm10.place(x=0,y=170)
-        self.aqi_pm10.config(text=f"""PM 10:- {response["current"]["air_quality"]["pm10"]}""",bg=background_color)
+        self.aqi_pm10.config(text=f"""PM 10:- {self.response["current"]["air_quality"]["pm10"]}""",bg=background_color)
         
         self.aqi_gb_defra_index.place(x=0,y=203)
-        self.aqi_gb_defra_index.config(text=f"""GB Defra Index:- {response["current"]["air_quality"]["gb-defra-index"]}""",bg=background_color)
+        self.aqi_gb_defra_index.config(text=f"""GB Defra Index:- {self.response["current"]["air_quality"]["gb-defra-index"]}""",bg=background_color)
         
         self.quality.place(x=0,y=236)
         self.quality.config(text=quality_text,bg=background_color)
