@@ -34,7 +34,7 @@ class WeatherApp:
                                         bg="#101010",border=0,borderwidth=0,width=2,command=self.fahrenheit)
         self.quality = Label(self.air_quality_frame,font="Roboto 14 bold")
         
-        self.time = time.strftime("%I:%M %p")
+        self.show_time_widget = Label(self.window,text="",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
     
     
     def default_location(self):
@@ -50,7 +50,6 @@ class WeatherApp:
         try:
             if len(self.store_location.get()) != 0:
                 try:
-                    print("main command line")
                     
                     # editing location to make it fit for url
                     location = str(self.store_location.get()).strip().lower()
@@ -112,16 +111,14 @@ class WeatherApp:
                     self.celsius_fahrenheit_button.place_forget()
                     self.weather_show.config(text="This Location doesn't Exist",font="Helvetica 16 bold")
                     self.location_city_region.config(text="ERROR")
-                    print("weather error")
-                    
+            
             else:
                 self.default_location()
         
         except Exception as e:
             self.default_location()
-            
-
-
+    
+    
     def infoui(self):
         '''It's UI to enter your API Key details'''
         import webbrowser
@@ -145,16 +142,15 @@ class WeatherApp:
                 with open("account.dat","wb") as file:
                     info = {"email":emailid.get(),"api_key":api_key.get()}
                     
-                    # encryting the data
-                    
                     dump(info,file)
-                    time.sleep(1.5)
-                    for widget in self.window.winfo_children():
-                        widget.destroy()
-                    else:
-                        self.mainui()
-        
-        
+                self.window.destroy()
+                # time.sleep(1)
+                self.__init__()
+                self.API_KEY = api_key.get()
+                self.default_location()
+                self.mainui()
+    
+    
         self.window.title("Information")
         self.window.geometry("850x205")
         self.window.resizable(False,False)
@@ -180,24 +176,31 @@ class WeatherApp:
                borderwidth=0,command=lambda :webbrowser.open("https://www.weatherapi.com/")).place(x=262,y=142)
         
         self.window.mainloop()
-
-
+    
+    
     def celsius(self):
         '''The function to show weather in Degree Celsius if button is pressed'''
         
         self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
         self.feels_like.config(text=f"{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C")
-
-
+    
+    
     def fahrenheit(self):
         '''The function to show weather in Fahrenheit when button is pressed'''
         
         self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
         self.weather_show.config(text=f"{self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
         self.feels_like.config(text=f"{self.response['current']['feelslike_f']}{DEGREE_SYMBOL}F")
-
-
+    
+    
+    def show_time(self):
+        time_am_pm = time.strftime("%I:%M %p")
+        self.show_time_widget.config(text=time_am_pm)
+        self.show_time_widget.after(1000,self.show_time)
+        self.show_time_widget.place(x=6,y=100)
+    
+    
     def mainui(self):
         '''It's Main UI where you will see weather information and AQI of that particular location'''
         
@@ -232,7 +235,7 @@ class WeatherApp:
         Label(self.window,text="Current Weather",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF").place(x=6,y=60)
         
         # to show current time when press search button or enter
-        Label(self.window,text=self.time,font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF").place(x=6,y=100)
+        self.show_time()
         
         # to show city and region
         Label(image=location_icon,bg="#101010").place(x=510,y=6)
@@ -325,20 +328,18 @@ class WeatherApp:
         self.quality.config(text=quality_text,bg=background_color)
         
         self.window.mainloop()
-
-
+    
+    
     def main_execution(self):
         try:
             with open("account.dat","rb") as file:
-                for i in range(1):
-                    data = load(file)['api_key']
-                    self.API_KEY = data
-                else:
-                    self.mainui()
+                self.API_KEY = load(file)['api_key']
+            self.mainui()
         except:
             self.infoui()
-
-
+    
+    
 if __name__ == '__main__':
-    
-    
+    app = WeatherApp()
+    app.main_execution()
+
