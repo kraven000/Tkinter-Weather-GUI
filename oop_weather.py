@@ -8,8 +8,9 @@ import time
 DEGREE_SYMBOL = u"\u00b0"
 
 class WeatherApp:
-    def __init__(self,API_KEY):
-        self.API_KEY = API_KEY
+    def __init__(self):
+        
+        self.API_KEY = None
         self.response = self.default_location()
         self.window = Tk()
         self.store_location = StringVar()
