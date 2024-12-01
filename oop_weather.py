@@ -1,26 +1,17 @@
 from tkinter import Tk,Label,Entry,Button,Frame,PhotoImage,StringVar
 from tkinter.messagebox import showerror
 from requests import get
-from json import loads,dumps
-from pytz import timezone
-from datetime import datetime
-from main import weather
+from pickle import load,dump
+import time
 
+
+DEGREE_SYMBOL = u"\u00b0"
 
 class WeatherApp:
-    def __init__(self):
-        try:
-            with open("account.json","r") as file:
-                data = loads(file.read())['api_key']
-                self.API_KEY = data
-        except:
-            pass
-        
-        
+    def __init__(self,API_KEY):
+        self.API_KEY = API_KEY
         self.response = self.default_location()
-        self.degree_symbol = u"\u00b0"
         self.window = Tk()
-        self.time_text = Label(font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
         self.store_location = StringVar()
         self.weather_show = Label(self.window,font="Helvetica 60 bold",fg="#FFFFFF",bg="#101010")
         self.location_city_region = Label(self.window,font="Helvetica 16 bold",bg="#101010",fg="#FFFFFF")
@@ -38,9 +29,11 @@ class WeatherApp:
         self.aqi_pm2_5 = Label(self.air_quality_frame,font="Roboto 14 bold")
         self.aqi_pm10 = Label(self.air_quality_frame,font="Roboto 14 bold")
         self.aqi_gb_defra_index = Label(self.air_quality_frame,font="Roboto 14 bold")
-        self.celsius_fahrenhiet_button = Button(self.window,text=f"{self.degree_symbol}F",font="Helvetica 50 bold",fg="#FFFFFF",
-                                        bg="#101010",border=0,borderwidth=0,width=2,command=self.fahrenhiet)
+        self.celsius_fahrenheit_button = Button(self.window,text=f"{DEGREE_SYMBOL}F",font="Helvetica 50 bold",fg="#FFFFFF",
+                                        bg="#101010",border=0,borderwidth=0,width=2,command=self.fahrenheit)
         self.quality = Label(self.air_quality_frame,font="Roboto 14 bold")
+        
+        self.time = time.strftime("%I:%M %p")
     
     
     def default_location(self):
@@ -48,14 +41,16 @@ class WeatherApp:
         location = location["loc"]
         # weather
         url = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
-        del location
-        return url
+        
+        self.response = url
     
     
     def weather(self,events=None):
         try:
             if len(self.store_location.get()) != 0:
                 try:
+                    print("main command line")
+                    
                     # editing location to make it fit for url
                     location = str(self.store_location.get()).strip().lower()
                     location = location.replace(" ", "%20")
@@ -64,20 +59,15 @@ class WeatherApp:
                     url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
                     del location
                     
-                    #time with different timezones
-                    time = datetime.now(timezone(url_response["location"]["tz_id"])).strftime("%I:%M %p")
-                    
-                    self.celsius_fahrenhiet_button.place(x=710,y=100)
-                    
-                    # Adding time and 'Current Weather' text
-                    self.time_text.config(text=f"{time} ")
+                    self.celsius_fahrenheit_button.place(x=710,y=100)
+                    self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
                     
                     # changing location and region
                     self.location_city_region.config(text=f"""{url_response["location"]["name"]}, {url_response["location"]["region"]}, {url_response["location"]["country"]}""")
                     
                     
                     # adding weather in degree celsius
-                    self.weather_show.config(text=f"""{url_response["current"]["temp_c"]}{self.degree_symbol}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
+                    self.weather_show.config(text=f"""{url_response["current"]["temp_c"]}{DEGREE_SYMBOL}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
                     
                     
                     # adding condition            
@@ -107,53 +97,112 @@ class WeatherApp:
                     
                     
                     self.air_quality_frame.config(bg=background_color)
-                    self.aqi_co.config(text=f"""CO:- {air_quality["co"]}""",bg=background_color)
-                    self.aqi_no2.config(text=f"""NO2:- {air_quality["no2"]}""",bg=background_color)
-                    self.aqi_o3.config(text=f"""O3:- {air_quality["o3"]}""",bg=background_color)
-                    self.aqi_so2.config(text=f"""SO2:- {air_quality["so2"]}""",bg=background_color)
-                    self.aqi_pm2_5.config(text=f"""PM 2.5:- {air_quality["pm2_5"]}""",bg=background_color)
-                    self.aqi_pm10.config(text=f"""PM 10:- {air_quality["pm10"]}""",bg=background_color)
-                    self.aqi_gb_defra_index.config(text=f"""GB Defra Index:- {air_quality["gb-defra-index"]}""",bg=background_color)
+                    self.aqi_co.config(text=f"CO:- {air_quality['co']}",bg=background_color)
+                    self.aqi_no2.config(text=f"NO2:- {air_quality['no2']}",bg=background_color)
+                    self.aqi_o3.config(text=f"O3:- {air_quality['o3']}""",bg=background_color)
+                    self.aqi_so2.config(text=f"SO2:- {air_quality['so2']}",bg=background_color)
+                    self.aqi_pm2_5.config(text=f"PM 2.5:- {air_quality['pm2_5']}",bg=background_color)
+                    self.aqi_pm10.config(text=f"PM 10:- {air_quality['pm10']}",bg=background_color)
+                    self.aqi_gb_defra_index.config(text=f"GB Defra Index:- {air_quality['gb-defra-index']}",bg=background_color)
                     
-                    del air_quality
                     self.response = url_response
-                    return url_response
                 
                 except KeyError:
-                    self.celsius_fahrenhiet_button.place_forget()
+                    self.celsius_fahrenheit_button.place_forget()
                     self.weather_show.config(text="This Location doesn't Exist",font="Helvetica 16 bold")
                     self.location_city_region.config(text="ERROR")
+                    print("weather error")
                     
             else:
                 self.default_location()
         
-        except:
+        except Exception as e:
             self.default_location()
-    
-    # def temp(self):
-    #     with open("temp.json","r") as file:
-    #         return loads(file.read())
-    
-    
+            
+
+
+    def infoui(self):
+        '''It's UI to enter your API Key details'''
+        import webbrowser
+        
+        def verfiy_api():
+            location = get("https://ipinfo.io/json").json()["loc"]
+            check = get(f"https://api.weatherapi.com/v1/current.json?key={api_key.get()}&q={location}&aqi=no")
+            
+            if check.status_code==200:
+                Label(self.window,text="Verified!!!!",font="Helvetica 14 bold").place(x=600,y=40)
+                submit_button.config(state="normal")
+                
+            else:
+                showerror(title="API key Issue",message="The api key you have entered is not correct or it is been disabled please check your API key??")
+        
+        
+        def storing_api_key():
+            if ".com" not in emailid.get().lower() or "@" not in emailid.get().lower(): 
+                    showerror(title="Email Error",message="I think it is not a valid Email ID??")
+            else:
+                with open("account.dat","wb") as file:
+                    info = {"email":emailid.get(),"api_key":api_key.get()}
+                    
+                    # encryting the data
+                    
+                    dump(info,file)
+                    time.sleep(1.5)
+                    for widget in self.window.winfo_children():
+                        widget.destroy()
+                    else:
+                        self.mainui()
+        
+        
+        self.window.title("Information")
+        self.window.geometry("850x205")
+        self.window.resizable(False,False)
+        
+        Label(self.window,text='Email ID: ',font="Helvetica 16 bold").place(x=1,y=1)
+        Label(self.window,text='API Key: ',font="Helvetica 16 bold").place(x=1,y=31)
+        
+        
+        emailid = StringVar()
+        api_key = StringVar()
+        
+        Entry(self.window,textvariable=emailid,width=32,font="Helvetica 14 bold").place(x=100,y=2)
+        Entry(self.window,textvariable=api_key,width=32,font="Helvetica 14 bold").place(x=100,y=32)
+        
+        Button(self.window,text="Verify API Key",font="Aerial 8 bold",command=verfiy_api).place(x=460,y=32)
+        
+        submit_button = Button(self.window,text="Submit",state="disabled",font="Aerial 12 bold",command=storing_api_key)
+        submit_button.place(x=2,y=70)
+        
+        Label(self.window,text="IMPORTANT!! The API Key Should Be Of 'weatherapi.com' other than API\nkey will cause error.Go to https://www.weatherapi.com/ to get your API key.",font="Helvetica 16 bold",fg="#FF0000").place(x=0,y=120)
+        
+        Button(self.window,text="https://www.weatherapi.com/",font="Roboto 15 bold",fg="#004C99",border=0,
+               borderwidth=0,command=lambda :webbrowser.open("https://www.weatherapi.com/")).place(x=262,y=142)
+        
+        self.window.mainloop()
+
+
     def celsius(self):
         '''The function to show weather in Degree Celsius if button is pressed'''
         
-        self.celsius_fahrenhiet_button.config(text=f"{self.degree_symbol}F",command=self.fahrenhiet)
-        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{self.degree_symbol}C /")
-        self.feels_like.config(text=f"{self.response['current']['feelslike_c']}{self.degree_symbol}C")
+        self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
+        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
+        self.feels_like.config(text=f"{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C")
 
 
-    def fahrenhiet(self):
-        '''The function to show weather in Fahrenhiet when button is pressed'''
+    def fahrenheit(self):
+        '''The function to show weather in Fahrenheit when button is pressed'''
         
-        self.celsius_fahrenhiet_button.config(text=f"{self.degree_symbol}C",command=self.celsius)
-        self.weather_show.config(text=f"{self.response['current']['temp_f']}{self.degree_symbol}F /")
-        self.feels_like.config(text=f"{self.response['current']['feelslike_f']}{self.degree_symbol}F")
+        self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
+        self.weather_show.config(text=f"{self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
+        self.feels_like.config(text=f"{self.response['current']['feelslike_f']}{DEGREE_SYMBOL}F")
 
 
-    def buildui(self):
+    def mainui(self):
+        '''It's Main UI where you will see weather information and AQI of that particular location'''
         
-        # root.iconphoto(True,icon)
+        # to fetch weather and AQI of your current location
+        self.default_location()
+        
         self.window.title("Weather App")
         self.window.geometry("1220x505")
         self.window.resizable(False,False)
@@ -174,21 +223,15 @@ class WeatherApp:
         entry_widget.bind("<Return>",self.weather)
         entry_widget.focus()
         
-        # i am declaring default response as global to avoid calling weather soo many time and only calling it one time
-        # default_response = weather()
-        
         
         #button for search
         Button(self.window,image=search_icon,bg="#101010",borderwidth=0,border=0,command=self.weather).place(x=450,y=6)
         
         # current weather text to show after user press search button or enter
-        current_weather_text = Label(self.window,text="Current Weather",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
-        current_weather_text.place(x=6,y=60)
+        Label(self.window,text="Current Weather",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF").place(x=6,y=60)
         
         # to show current time when press search button or enter
-        time = datetime.now(timezone(self.response["location"]["tz_id"])).strftime("%I:%M %p")
-        self.time_text.place(x=6,y=100)
-        self.time_text.config(text=time)
+        Label(self.window,text=self.time,font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF").place(x=6,y=100)
         
         # to show city and region
         Label(image=location_icon,bg="#101010").place(x=510,y=6)
@@ -201,21 +244,20 @@ class WeatherApp:
         
         # showing weather
         self.weather_show.place(x=412,y=115)
-        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{self.degree_symbol}C /")
+        self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
         
         # showing condition
-        
         self.weather_condition.place(x=422,y=200)
         self.weather_condition.config(text=f"""Condition:- {self.response['current']['condition']['text']}""")
         
         # Button to switch between degree celsius and degree fahrenheit
-        self.celsius_fahrenhiet_button.place(x=710,y=100)
-        self.celsius_fahrenhiet_button.config(text=f"{self.degree_symbol}F",command=self.fahrenhiet)
+        self.celsius_fahrenheit_button.place(x=710,y=100)
+        self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         
-        
-        self.below_details.place(x=-10,y=390)
         
         # To show Wind Speed, Humidity, Description and Pressure
+        self.below_details.place(x=-10,y=390)
+        
         Label(self.below_details,text="""WIND SPEED                                HUMIDITY                                FEELS LIKE                                PRESSURE""",font="Default 18 bold",fg="#FFFFFF",bg="#0066CC",border=0,borderwidth=0).place(x=10,y=10)
         
         self.windspeed.config(text=f"""{self.response['current']['wind_kph']} km/hr""")
@@ -224,7 +266,7 @@ class WeatherApp:
         self.humidity.config(text=f"""{self.response['current']['humidity']}%""")
         self.humidity.place(x=415,y=70)
         
-        self.feels_like.config(text=f"""{self.response['current']['feelslike_c']}{self.degree_symbol}C""")
+        self.feels_like.config(text=f"""{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C""")
         self.feels_like.place(x=770,y=70)
         
         self.pressure.config(text=f"""{self.response['current']['pressure_mb']} mb""")
@@ -284,6 +326,18 @@ class WeatherApp:
         self.window.mainloop()
 
 
+    def main_execution(self):
+        try:
+            with open("account.dat","rb") as file:
+                for i in range(1):
+                    data = load(file)['api_key']
+                    self.API_KEY = data
+                else:
+                    self.mainui()
+        except:
+            self.infoui()
+
+
 if __name__ == '__main__':
-    f = WeatherApp()
-    f.buildui()
+    
+    
