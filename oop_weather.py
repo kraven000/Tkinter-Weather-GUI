@@ -80,7 +80,7 @@ class WeatherApp:
                     
                     
                     # adding condition            
-                    self.weather_condition.config(text=f"""Feels Like:- {url_response['current']['condition']['text']}""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
+                    self.weather_condition.config(text=f"""Condition:- {url_response['current']['condition']['text']}""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
                     
                     
                     # adding the details of bluebox
@@ -118,8 +118,24 @@ class WeatherApp:
                 
                 except KeyError:
                     self.celsius_fahrenheit_button.place_forget()
-                    self.weather_show.config(text="This Location doesn't Exist",font="Helvetica 16 bold")
-                    self.location_city_region.config(text="ERROR")
+                    self.location_city_region.config(text="This Location doesn't Exist")
+                    self.weather_show.config(text="ERROR")
+                    self.windspeed.config(text="-")
+                    self.humidity.config(text="-")
+                    self.feels_like.config(text="-")
+                    self.pressure.config(text="-")
+                    
+                    self.air_quality_frame.config(bg="#C3CAC9")
+                    self.aqi_co.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_no2.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_o3.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_so2.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_pm2_5.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_pm10.config(text="No Data",bg="#C3CAC9")
+                    self.aqi_gb_defra_index.config(text="No Data",bg="#C3CAC9")
+                    self.quality.config(text="No Data",bg="#C3CAC9")
+                    
+                    self.weather_condition.config(text="No Data")
             
             else:
                 self.default_location()
