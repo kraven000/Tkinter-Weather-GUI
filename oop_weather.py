@@ -72,22 +72,22 @@ class WeatherApp:
                     self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
                     
                     # changing location and region
-                    self.location_city_region.config(text=f"""{url_response["location"]["name"]}, {url_response["location"]["region"]}, {url_response["location"]["country"]}""")
+                    self.location_city_region.config(text=f"{url_response['location']['name']}, {url_response['location']['region']}, {url_response['location']['country']}")
                     
                     
                     # adding weather in degree celsius
-                    self.weather_show.config(text=f"""{url_response["current"]["temp_c"]}{DEGREE_SYMBOL}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
+                    self.weather_show.config(text=f"{url_response['current']['temp_c']}{DEGREE_SYMBOL}C /")
                     
                     
                     # adding condition            
-                    self.weather_condition.config(text=f"""Condition:- {url_response['current']['condition']['text']}""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
+                    self.weather_condition.config(text=f"Condition:- {url_response['current']['condition']['text']}")
                     
                     
                     # adding the details of bluebox
-                    self.windspeed.config(text=f"""{url_response["current"]["wind_kph"]} km/hr""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                    self.pressure.config(text=f"""{url_response["current"]["pressure_mb"]} mb""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                    self.humidity.config(text=f"""{url_response["current"]["humidity"]}%""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                    self.feels_like.config(text=f"{url_response['current']['feelslike_c']}",bg="#0066CC",fg="#202020",font="default 16 bold")
+                    self.windspeed.config(text=f"{url_response["current"]["wind_kph"]} km/hr",)
+                    self.pressure.config(text=f"{url_response["current"]["pressure_mb"]} mb",)
+                    self.humidity.config(text=f"{url_response["current"]["humidity"]}%",)
+                    self.feels_like.config(text=f"{url_response['current']['feelslike_c']}",)
                     
                     
                     air_quality = url_response["current"]["air_quality"]
