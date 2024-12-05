@@ -87,7 +87,7 @@ class WeatherApp:
                     self.windspeed.config(text=f"{url_response["current"]["wind_kph"]} km/hr",)
                     self.pressure.config(text=f"{url_response["current"]["pressure_mb"]} mb",)
                     self.humidity.config(text=f"{url_response["current"]["humidity"]}%",)
-                    self.feels_like.config(text=f"{url_response['current']['feelslike_c']}",)
+                    self.feels_like.config(text=f"{url_response['current']['feelslike_c']}{DEGREE_SYMBOL}C",)
                     
                     
                     air_quality = url_response["current"]["air_quality"]
@@ -175,8 +175,11 @@ class WeatherApp:
                 self.default_location()
                 self.mainui()
     
-    
+        # GUI Icon
+        information_icon = PhotoImage(file="information_icon.png")
+        
         self.window.title("Information")
+        self.window.iconphoto(False,information_icon)
         self.window.geometry("850x205")
         self.window.resizable(False,False)
         
@@ -259,7 +262,7 @@ class WeatherApp:
         search_icon = PhotoImage(file="search_icon.png")
         location_icon = PhotoImage(file="location_icon.png")
         
-        # Icon
+        # Window Icon
         self.window.iconphoto(False,gui_icon)
         
         #entry widget
