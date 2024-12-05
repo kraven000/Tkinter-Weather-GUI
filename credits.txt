@@ -4,4 +4,4 @@ Say thanks to DCEmr_e:- weather_icon.png
 Say thanks to neotam:- search_icon.png
 Say thanks to onlineakhil:- location.png
 Say thanks to Tabble:- icon.png
-Say thanks to OpenClipart-Vectors
+Say thanks to OpenClipart-Vectors:- information_icon.png
