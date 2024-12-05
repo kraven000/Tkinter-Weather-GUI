@@ -30,11 +30,13 @@ class WeatherApp:
         self.aqi_pm2_5 = Label(self.air_quality_frame,font="Roboto 14 bold")
         self.aqi_pm10 = Label(self.air_quality_frame,font="Roboto 14 bold")
         self.aqi_gb_defra_index = Label(self.air_quality_frame,font="Roboto 14 bold")
-        self.celsius_fahrenheit_button = Button(self.window,text=f"{DEGREE_SYMBOL}F",font="Helvetica 50 bold",fg="#FFFFFF",
-                                        bg="#101010",border=0,borderwidth=0,width=2,command=self.fahrenheit)
+        self.celsius_fahrenheit_button = Button(self.window,text=f"{DEGREE_SYMBOL}F",
+                                                font="Helvetica 50 bold",fg="#FFFFFF",bg="#101010",
+                                                border=0,borderwidth=0,width=2,command=self.fahrenheit)
         self.quality = Label(self.air_quality_frame,font="Roboto 14 bold")
         
-        self.show_time_widget = Label(self.window,text="",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
+        self.show_time_widget = Label(self.window,text="",font="Helvetica 20 bold",bg="#101010",
+                                      fg="#FFFFFF")
     
     
     def default_location(self):
@@ -59,7 +61,14 @@ class WeatherApp:
                     url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
                     del location
                     
-                    self.celsius_fahrenheit_button.place(x=710,y=100)
+                    len_of_weather = len(str(url_response['current']['temp_c']))+2
+                    if len_of_weather>6:
+                        self.celsius_fahrenheit_button.place(x=735,y=100)
+                    elif len_of_weather<6:
+                        self.celsius_fahrenheit_button.place(x=690,y=100)
+                    else:
+                        self.celsius_fahrenheit_button.place(x=710,y=100)
+                    
                     self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
                     
                     # changing location and region
@@ -181,6 +190,14 @@ class WeatherApp:
     def celsius(self):
         '''The function to show weather in Degree Celsius if button is pressed'''
         
+        len_of_weather = len(str(self.response['current']['temp_c']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=735,y=100)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=690,y=100)
+        else:
+            self.celsius_fahrenheit_button.place(x=710,y=100)
+        
         self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         self.weather_show.config(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
         self.feels_like.config(text=f"{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C")
@@ -189,6 +206,14 @@ class WeatherApp:
     def fahrenheit(self):
         '''The function to show weather in Fahrenheit when button is pressed'''
         
+        len_of_weather = len(str(self.response['current']['temp_f']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=725,y=100)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=695,y=100)
+        else:
+            self.celsius_fahrenheit_button.place(x=710,y=100)
+            
         self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
         self.weather_show.config(text=f"{self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
         self.feels_like.config(text=f"{self.response['current']['feelslike_f']}{DEGREE_SYMBOL}F")
@@ -255,7 +280,13 @@ class WeatherApp:
         self.weather_condition.config(text=f"""Condition:- {self.response['current']['condition']['text']}""")
         
         # Button to switch between degree celsius and degree fahrenheit
-        self.celsius_fahrenheit_button.place(x=710,y=100)
+        len_of_weather = len(str(self.response['current']['temp_f']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=725,y=100)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=695,y=100)
+        else:
+            self.celsius_fahrenheit_button.place(x=710,y=100)
         self.celsius_fahrenheit_button.config(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         
         
