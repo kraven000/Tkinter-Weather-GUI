@@ -54,7 +54,7 @@ class WeatherApp:
                 try:
                     
                     # editing location to make it fit for url
-                    location = str(self.store_location.get()).strip().lower()
+                    location = self.store_location.get().strip().lower()
                     location = location.replace(" ", "%20")
                     
                     # json file of weather
@@ -84,23 +84,23 @@ class WeatherApp:
                     
                     
                     # adding the details of bluebox
-                    self.windspeed.config(text=f"{url_response["current"]["wind_kph"]} km/hr",)
-                    self.pressure.config(text=f"{url_response["current"]["pressure_mb"]} mb",)
-                    self.humidity.config(text=f"{url_response["current"]["humidity"]}%",)
+                    self.windspeed.config(text=f"{url_response['current']['wind_kph']} km/hr",)
+                    self.pressure.config(text=f"{url_response['current']['pressure_mb']} mb",)
+                    self.humidity.config(text=f"{url_response['current']['humidity']}%",)
                     self.feels_like.config(text=f"{url_response['current']['feelslike_c']}{DEGREE_SYMBOL}C",)
                     
                     
-                    air_quality = url_response["current"]["air_quality"]
-                    if air_quality["gb-defra-index"]>=1 and air_quality["gb-defra-index"]<4:
+                    air_quality = url_response['current']['air_quality']
+                    if air_quality['gb-defra-index']>=1 and air_quality['gb-defra-index']<4:
                         background_color = "#80FF00"
                         self.quality.config(text="Quality:- Low",bg=background_color)
-                    elif air_quality["gb-defra-index"]>=4 and air_quality["gb-defra-index"]<7:
+                    elif air_quality['gb-defra-index']>=4 and air_quality['gb-defra-index']<7:
                         background_color = "#F2D414"
                         self.quality.config(text="Quality:- Moderate",bg=background_color)
-                    elif air_quality["gb-defra-index"]>=7 and air_quality["gb-defra-index"]<10:
+                    elif air_quality['gb-defra-index']>=7 and air_quality['gb-defra-index']<10:
                         background_color = "#CC0000"
                         self.quality.config(text="Quality:- High",bg=background_color)
-                    elif air_quality["gb-defra-index"]==10:
+                    elif air_quality['gb-defra-index']==10:
                         background_color = "#99004C"
                         self.quality.config(text="AQI:- Very High",bg=background_color)
                     
