@@ -45,12 +45,9 @@ class WeatherApp:
         location = get(("https://ipinfo.io/json")).json()
         location = location["loc"]
         # weather
-        # url = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
+        url = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
         
-        with open('temp.json', 'r') as file:
-            import json
-            data = json.load(file)
-        self.response = data
+        self.response = url
     
     
     def weather(self,events=None):
@@ -68,11 +65,11 @@ class WeatherApp:
                     
                     len_of_weather = len(str(url_response['current']['temp_c']))+2
                     if len_of_weather>6:
-                        self.celsius_fahrenheit_button.place(x=721,y=175)
+                        self.celsius_fahrenheit_button.place(x=699,y=175)
                     elif len_of_weather<6:
-                        self.celsius_fahrenheit_button.place(x=657,y=175)
+                        self.celsius_fahrenheit_button.place(x=635,y=175)
                     else:
-                        self.celsius_fahrenheit_button.place(x=705,y=175)
+                        self.celsius_fahrenheit_button.place(x=683,y=175)
                     
                     self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
                     
@@ -164,7 +161,7 @@ class WeatherApp:
             check = get(f"https://api.weatherapi.com/v1/current.json?key={api_key.get()}&q={location}&aqi=no")
             
             if check.status_code==200:
-                CTkLabel(self.window,text="Verified!!!!",font=("Helvetica",14)).place(x=600,y=40)
+                CTkLabel(self.window,text="Verified!!!!",font=("Helvetica",22),text_color="#009900").place(x=635,y=40)
                 submit_button.configure(state="normal")
                 
             else:
@@ -172,7 +169,7 @@ class WeatherApp:
         
         
         def storing_api_key():
-            if ".com" not in emailid.get().lower() or "@" not in emailid.get().lower(): 
+            if "." not in emailid.get().lower()  or "@" not in emailid.get().lower(): 
                     showerror(title="Email Error",message="I think it is not a valid Email ID??")
             else:
                 with open("account.dat","wb") as file:
@@ -180,14 +177,13 @@ class WeatherApp:
                     
                     dump(info,file)
                 self.window.destroy()
-                # time.sleep(1)
+                #
                 self.__init__()
                 self.API_KEY = api_key.get()
                 self.default_location()
                 self.mainui()
     
         # GUI Icon
-        # information_icon = PhotoImage(file="information_icon.png")
         information_icon = ImageTk.PhotoImage(Image.open("information_icon.png"))
         
         self.window.title("Information")
@@ -196,26 +192,26 @@ class WeatherApp:
         self.window.geometry("850x205")
         self.window.resizable(False,False)
         
-        CTkLabel(self.window,text='Email ID: ',font=("Helvetica",16)).place(x=1,y=1)
-        CTkLabel(self.window,text='API Key: ',font=("Helvetica",16)).place(x=1,y=31)
+        CTkLabel(self.window,text='Email ID: ',font=("Helvetica",20)).place(x=1,y=1)
+        CTkLabel(self.window,text='API Key: ',font=("Helvetica",20)).place(x=1,y=35)
         
         
         emailid = StringVar()
         api_key = StringVar()
         
-        CTkEntry(self.window,textvariable=emailid,width=32,font=("Helvetica",14)).place(x=100,y=2)
-        CTkEntry(self.window,textvariable=api_key,width=32,font=("Helvetica",14)).place(x=100,y=32)
+        CTkEntry(self.window,textvariable=emailid,width=370,font=("Helvetica",20)).place(x=100,y=2)
+        CTkEntry(self.window,textvariable=api_key,width=370,font=("Helvetica",20)).place(x=100,y=35)
         
-        CTkButton(self.window,text="Verify API Key",font=("Aerial",8),command=verfiy_api).place(x=460,y=32)
+        CTkButton(self.window,text="Verify API Key",font=("Aerial",20),command=verfiy_api).place(x=480,y=35)
         
-        submit_button = CTkButton(self.window,text="Submit",state="disabled",font=("Aerial",12),command=storing_api_key)
+        submit_button = CTkButton(self.window,text="Submit",state="disabled",font=("Aerial",20),command=storing_api_key)
         submit_button.place(x=2,y=70)
         
         CTkLabel(self.window,text="IMPORTANT!! The API Key Should Be Of 'weatherapi.com' other than API\nkey will cause error.Go to https://www.weatherapi.com/ to get your API key.",
-                 font=("Helvetica",16),text_color="#FF0000").place(x=0,y=120)
+                 font=("Helvetica",25),text_color="#FF0000").place(x=0,y=120)
         
-        CTkButton(self.window,text="https://www.weatherapi.com/",font=("Roboto",15),text_color="#004C99",
-                  command=lambda :webbrowser.open("https://www.weatherapi.com/")).place(x=262,y=142)
+        CTkButton(self.window,text="https://www.weatherapi.com/",font=("Roboto",24),text_color="#004C99",
+                  fg_color="transparent",command=lambda :webbrowser.open("https://www.weatherapi.com/")).place(x=285,y=145)
         
         self.window.mainloop()
     
@@ -225,11 +221,11 @@ class WeatherApp:
         
         len_of_weather = len(str(self.response['current']['temp_c']))+2
         if len_of_weather>6:
-            self.celsius_fahrenheit_button.place(x=721,y=175)
+            self.celsius_fahrenheit_button.place(x=699,y=175)
         elif len_of_weather<6:
-            self.celsius_fahrenheit_button.place(x=657,y=175)
+            self.celsius_fahrenheit_button.place(x=635,y=175)
         else:
-            self.celsius_fahrenheit_button.place(x=705,y=175)
+            self.celsius_fahrenheit_button.place(x=683,y=175)
         
         self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         self.weather_show.configure(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
@@ -241,11 +237,11 @@ class WeatherApp:
         
         len_of_weather = len(str(self.response['current']['temp_f']))+2
         if len_of_weather>6:
-            self.celsius_fahrenheit_button.place(x=721,y=175)
+            self.celsius_fahrenheit_button.place(x=699,y=175)
         elif len_of_weather<6:
-            self.celsius_fahrenheit_button.place(x=657,y=175)
+            self.celsius_fahrenheit_button.place(x=635,y=175)
         else:
-            self.celsius_fahrenheit_button.place(x=705,y=175)
+            self.celsius_fahrenheit_button.place(x=683,y=175)
             
         self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
         self.weather_show.configure(text=f"{self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
@@ -305,7 +301,7 @@ class WeatherApp:
                                             image=location_icon,compound="left")
         
         # showing weather
-        self.weather_show.place(x=127,y=100)
+        self.weather_show.place(x=120,y=100)
         self.weather_show.configure(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /",
                                     image=weather_icon,compound="left")
         
@@ -316,11 +312,11 @@ class WeatherApp:
         # Button to switch between degree celsius and degree fahrenheit
         len_of_weather = len(str(self.response['current']['temp_f']))+2
         if len_of_weather>6:
-            self.celsius_fahrenheit_button.place(x=721,y=175)
+            self.celsius_fahrenheit_button.place(x=699,y=175)
         elif len_of_weather<6:
-            self.celsius_fahrenheit_button.place(x=657,y=175)
+            self.celsius_fahrenheit_button.place(x=635,y=175)
         else:
-            self.celsius_fahrenheit_button.place(x=705,y=175)
+            self.celsius_fahrenheit_button.place(x=683,y=175)
         self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
         
         
@@ -407,4 +403,5 @@ class WeatherApp:
 if __name__ == '__main__':
     app = WeatherApp()
     app.main_execution()
+    
 
