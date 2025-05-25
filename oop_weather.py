@@ -74,11 +74,11 @@ class WeatherApp:
                     self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
                     
                     # changing location and region
-                    self.location_city_region.configure(text=f"{url_response['location']['name']}, {url_response['location']['region']}, {url_response['location']['country']}")
+                    self.location_city_region.configure(text=f" {url_response['location']['name']}, {url_response['location']['region']}, {url_response['location']['country']}")
                     
                     
                     # adding weather in degree celsius
-                    self.weather_show.configure(text=f"{url_response['current']['temp_c']}{DEGREE_SYMBOL}C /")
+                    self.weather_show.configure(text=f" {url_response['current']['temp_c']}{DEGREE_SYMBOL}C /")
                     
                     
                     # adding condition            
@@ -184,7 +184,7 @@ class WeatherApp:
                 self.mainui()
     
         # GUI Icon
-        information_icon = ImageTk.PhotoImage(Image.open("information_icon.png"))
+        information_icon = ImageTk.PhotoImage(Image.open("png\\information_icon.png"))
         
         self.window.title("Information")
         self.window.wm_iconbitmap()
@@ -228,7 +228,7 @@ class WeatherApp:
             self.celsius_fahrenheit_button.place(x=683,y=175)
         
         self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
-        self.weather_show.configure(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
+        self.weather_show.configure(text=f" {self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
         self.feels_like.configure(text=f"FEELS LIKE\n\n{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C")
     
     
@@ -237,14 +237,14 @@ class WeatherApp:
         
         len_of_weather = len(str(self.response['current']['temp_f']))+2
         if len_of_weather>6:
-            self.celsius_fahrenheit_button.place(x=699,y=175)
+            self.celsius_fahrenheit_button.place(x=708,y=175)
         elif len_of_weather<6:
-            self.celsius_fahrenheit_button.place(x=635,y=175)
+            self.celsius_fahrenheit_button.place(x=644,y=175)
         else:
-            self.celsius_fahrenheit_button.place(x=683,y=175)
+            self.celsius_fahrenheit_button.place(x=692,y=175)
             
         self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
-        self.weather_show.configure(text=f"{self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
+        self.weather_show.configure(text=f" {self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
         self.feels_like.configure(text=f"FEELS LIKE\n\n{self.response['current']['feelslike_f']}{DEGREE_SYMBOL}F")
     
     
@@ -262,15 +262,15 @@ class WeatherApp:
         self.default_location()
         
         self.window.title("Weather App")
-        self.window.geometry("1220x505")
+        self.window.geometry("1220x505+100+100")
         self.window.resizable(False,False)
         self.window.configure(fg_color="#202020")
         
         # Images
-        gui_icon = ImageTk.PhotoImage((Image.open("icon.png")))
-        weather_icon = CTkImage(Image.open("weather_icon.png"),size=(250,250))
-        search_icon = CTkImage(Image.open("search_icon.png"),size=(46,46))
-        location_icon = CTkImage(Image.open("location_icon.png"),size=(46,46))
+        gui_icon = ImageTk.PhotoImage((Image.open("png\\icon.png")))
+        weather_icon = CTkImage(Image.open("png\\weather_icon.png"),size=(250,250))
+        search_icon = CTkImage(Image.open("png\\search_icon.png"),size=(46,46))
+        location_icon = CTkImage(Image.open("png\\location_icon.png"),size=(46,46))
         
         # Window Icon
         self.window.wm_iconbitmap()
@@ -297,12 +297,12 @@ class WeatherApp:
         
         # to show city and region
         self.location_city_region.place(x=480,y=10)
-        self.location_city_region.configure(text=f"""{self.response["location"]["name"]}, {self.response["location"]["region"]}, {self.response["location"]["country"]}""",
+        self.location_city_region.configure(text=f" {self.response['location']['name']}, {self.response['location']['region']}, {self.response['location']['country']}",
                                             image=location_icon,compound="left")
         
         # showing weather
-        self.weather_show.place(x=120,y=100)
-        self.weather_show.configure(text=f"{self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /",
+        self.weather_show.place(x=113,y=100)
+        self.weather_show.configure(text=f" {self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /",
                                     image=weather_icon,compound="left")
         
         # showing condition
