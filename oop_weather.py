@@ -1,9 +1,9 @@
-# from tkinter import Tk,Label,Entry,Button,Frame,PhotoImage,StringVar
 from customtkinter import CTk,CTkLabel,CTkEntry,CTkButton,CTkFrame,CTkImage,StringVar
 from PIL import Image, ImageTk
 from tkinter.messagebox import showerror
 from requests import get
-from pickle import load,dump
+from dotenv import load_dotenv
+import os
 import time
 
 
@@ -11,8 +11,8 @@ DEGREE_SYMBOL = u"\u00b0"
 
 class WeatherApp:
     def __init__(self):
-        
-        self.API_KEY = None
+        load_dotenv()
+        self.API_KEY = os.getenv('API_KEY')
         self.response = self.default_location()
         self.window = CTk()
         self.store_location = StringVar()
@@ -169,22 +169,15 @@ class WeatherApp:
         
         
         def storing_api_key():
-            if "." not in emailid.get().lower()  or "@" not in emailid.get().lower(): 
-                    showerror(title="Email Error",message="I think it is not a valid Email ID??")
+            if len(name.get()) == 0 or len(api_key.get()) == 0:
+                showerror(title="Error",message="Please fill all the fields")
             else:
-                with open("account.dat","wb") as file:
-                    info = {"email":emailid.get(),"api_key":api_key.get()}
-                    
-                    dump(info,file)
+                with open(".env","w") as file:
+                    file.write(f'API_KEY = "{api_key.get()}"\nName = "{name.get().title()}"')
                 self.window.destroy()
-                #
-                self.__init__()
-                self.API_KEY = api_key.get()
-                self.default_location()
-                self.mainui()
     
         # GUI Icon
-        information_icon = ImageTk.PhotoImage(Image.open("png\\information_icon.png"))
+        information_icon = ImageTk.PhotoImage(Image.open("png files\\information_icon.png"))
         
         self.window.title("Information")
         self.window.wm_iconbitmap()
@@ -192,14 +185,14 @@ class WeatherApp:
         self.window.geometry("850x205")
         self.window.resizable(False,False)
         
-        CTkLabel(self.window,text='Email ID: ',font=("Helvetica",20)).place(x=1,y=1)
+        CTkLabel(self.window,text='Name: ',font=("Helvetica",20)).place(x=1,y=1)
         CTkLabel(self.window,text='API Key: ',font=("Helvetica",20)).place(x=1,y=35)
         
         
-        emailid = StringVar()
+        name = StringVar()
         api_key = StringVar()
         
-        CTkEntry(self.window,textvariable=emailid,width=370,font=("Helvetica",20)).place(x=100,y=2)
+        CTkEntry(self.window,textvariable=name,width=370,font=("Helvetica",20)).place(x=100,y=2)
         CTkEntry(self.window,textvariable=api_key,width=370,font=("Helvetica",20)).place(x=100,y=35)
         
         CTkButton(self.window,text="Verify API Key",font=("Aerial",20),command=verfiy_api).place(x=480,y=35)
@@ -267,10 +260,10 @@ class WeatherApp:
         self.window.configure(fg_color="#202020")
         
         # Images
-        gui_icon = ImageTk.PhotoImage((Image.open("png\\icon.png")))
-        weather_icon = CTkImage(Image.open("png\\weather_icon.png"),size=(250,250))
-        search_icon = CTkImage(Image.open("png\\search_icon.png"),size=(46,46))
-        location_icon = CTkImage(Image.open("png\\location_icon.png"),size=(46,46))
+        gui_icon = ImageTk.PhotoImage((Image.open("png files\\icon.png")))
+        weather_icon = CTkImage(Image.open("png files\\weather_icon.png"),size=(250,250))
+        search_icon = CTkImage(Image.open("png files\\search_icon.png"),size=(46,46))
+        location_icon = CTkImage(Image.open("png files\\location_icon.png"),size=(46,46))
         
         # Window Icon
         self.window.wm_iconbitmap()
@@ -392,12 +385,14 @@ class WeatherApp:
     
     
     def main_execution(self):
-        try:
-            with open("account.dat","rb") as file:
-                self.API_KEY = load(file)['api_key']
+        
+        if load_dotenv():
+            self.API_KEY = os.getenv('API_KEY')
             self.mainui()
-        except FileNotFoundError:
+        else:
             self.infoui()
+            self.__init__()
+            self.mainui()
     
     
 if __name__ == '__main__':
