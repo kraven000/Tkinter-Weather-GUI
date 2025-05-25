@@ -5,6 +5,9 @@ from requests import get
 from dotenv import load_dotenv
 import os
 import time
+from threading import Thread
+import pickle
+import time
 
 
 DEGREE_SYMBOL = u"\u00b0"
@@ -42,10 +45,22 @@ class WeatherApp:
     
     
     def default_location(self):
+        self.check_life_time(one_time=True)
+        
         location = get(("https://ipinfo.io/json")).json()
         location = location["loc"]
+        
         # weather
-        url = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
+        url = None
+        if self.get_cache(location.lower()) is not None:
+            # if location is cached then get the cached data
+            url = self.get_cache(location.lower())
+            print("From cache")
+        else:
+            edited_location = location.replace(" ","%20")
+            url = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={edited_location}&aqi=yes").json()
+            self.add_cache(location,url)
+            print("Not from cache")
         
         self.response = url
     
@@ -54,14 +69,22 @@ class WeatherApp:
         try:
             if len(self.store_location.get()) != 0:
                 try:
-                    
                     # editing location to make it fit for url
                     location = self.store_location.get().strip().lower()
-                    location = location.replace(" ", "%20")
                     
-                    # json file of weather
-                    url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={location}&aqi=yes").json()
-                    del location
+                    # checking if the location is cached
+                    cached_data = self.get_cache(location.lower())
+                    url_response = None
+                    if cached_data is not None:
+                        url_response = self.get_cache(location)
+                        print("From cache")
+                    else:
+                        # fetching data from API
+                        print("Not from cache")
+                        edited_location = location.replace(" ", "%20")
+                        url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={edited_location}&aqi=yes").json()
+                        self.add_cache(location,url_response)
+                    
                     
                     len_of_weather = len(str(url_response['current']['temp_c']))+2
                     if len_of_weather>6:
@@ -150,6 +173,65 @@ class WeatherApp:
         
         except Exception as e:
             self.default_location()
+    
+    
+    def add_cache(self,place,response):
+        '''This function is used to cache the information'''
+        
+        time_data = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
+        
+        with open("cache.dat","ab") as file:
+            pickle.dump({place:response,"time":time_data},file)
+    
+    
+    def get_cache(self,place):
+        '''This function is used to get the cached information'''
+        
+        try:
+            with open("cache.dat","rb") as file:
+                while True:
+                    try:
+                        data = pickle.load(file)
+                        if place in data:
+                            return data[place]
+                    except EOFError:
+                        break
+        except FileNotFoundError:
+            return None
+    
+    
+    def check_life_time(self,one_time=False):
+        '''This function is used to check the life time of the cache'''
+        
+        print("Checking cache life time")
+        while True:
+            try:
+                with open("cache.dat","rb") as file:
+                    check_data = []
+                    while True:
+                        try:
+                            data = pickle.load(file)
+                            current_time = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
+                            if (current_time["hour"]-data["time"]["hour"])!=0 or current_time["minute"]-data["time"]["minute"]>=10:
+                                continue
+                            else:
+                                check_data.append(data)
+                        except EOFError:
+                            break
+                # print(check_data)
+                # print("start updating cache")
+                with open("cache.dat","wb") as file:
+                    for item in check_data:
+                        pickle.dump(item,file)
+                    print("Cache is up to date")
+                
+            except FileNotFoundError:
+                return False
+            
+            if not one_time:
+                time.sleep(600)  
+            else:
+                break
     
     
     def infoui(self):
@@ -380,6 +462,10 @@ class WeatherApp:
         
         self.quality.place(x=0,y=236)
         self.quality.configure(text=quality_text,fg_color=background_color)
+        
+        self.window.after(600000,self.check_life_time)
+        self.window.after(600000,self.weather)
+        self.window.after(1000,self.show_time)
         
         self.window.mainloop()
     
