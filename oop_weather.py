@@ -5,7 +5,6 @@ from requests import get
 from dotenv import load_dotenv
 import os
 import time
-from threading import Thread
 import pickle
 import time
 
@@ -52,9 +51,10 @@ class WeatherApp:
         
         # weather
         url = None
-        if self.get_cache(location.lower()) is not None:
+        cached_data = self.get_cache(location.lower())
+        if cached_data is not None:
             # if location is cached then get the cached data
-            url = self.get_cache(location.lower())
+            url = cached_data
             print("From cache")
         else:
             edited_location = location.replace(" ","%20")
@@ -76,7 +76,7 @@ class WeatherApp:
                     cached_data = self.get_cache(location.lower())
                     url_response = None
                     if cached_data is not None:
-                        url_response = self.get_cache(location)
+                        url_response = cached_data
                         print("From cache")
                     else:
                         # fetching data from API
