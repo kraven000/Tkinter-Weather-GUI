@@ -1,4 +1,4 @@
 .env
 temp.py
-account.dat
+*.dat
 *.json
