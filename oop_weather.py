@@ -44,7 +44,7 @@ class WeatherApp:
     
     
     def default_location(self):
-        self.check_life_time(one_time=True)
+        self.check_life_time()
         
         location = get(("https://ipinfo.io/json")).json()
         location = location["loc"]
@@ -200,38 +200,31 @@ class WeatherApp:
             return None
     
     
-    def check_life_time(self,one_time=False):
+    def check_life_time(self):
         '''This function is used to check the life time of the cache'''
         
         print("Checking cache life time")
-        while True:
-            try:
-                with open("cache.dat","rb") as file:
-                    check_data = []
-                    while True:
-                        try:
-                            data = pickle.load(file)
-                            current_time = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
-                            if (current_time["hour"]-data["time"]["hour"])!=0 or current_time["minute"]-data["time"]["minute"]>=10:
-                                continue
-                            else:
-                                check_data.append(data)
-                        except EOFError:
-                            break
-                # print(check_data)
-                # print("start updating cache")
-                with open("cache.dat","wb") as file:
-                    for item in check_data:
-                        pickle.dump(item,file)
-                    print("Cache is up to date")
-                
-            except FileNotFoundError:
-                return False
+        try:
+            with open("cache.dat","rb") as file:
+                check_data = []
+                while True:
+                    try:
+                        data = pickle.load(file)
+                        current_time = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
+                        if (current_time["hour"]-data["time"]["hour"])!=0 or current_time["minute"]-data["time"]["minute"]>=10:
+                            continue
+                        else:
+                            check_data.append(data)
+                    except EOFError:
+                        break
             
-            if not one_time:
-                time.sleep(600)  
-            else:
-                break
+            with open("cache.dat","wb") as file:
+                for item in check_data:
+                    pickle.dump(item,file)
+                print("Cache is up to date")
+            
+        except FileNotFoundError:
+            return False
     
     
     def infoui(self):
