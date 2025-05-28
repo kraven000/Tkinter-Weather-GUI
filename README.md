@@ -105,8 +105,13 @@ weather-app/
 ├── .env
 ├── cache.dat
 ├── png files/
-│   └── information_icon.png
+│   ├── icon.png
+│   ├── information_icon.png
+│   ├── location_icon.png
+│   ├── search_icon.png
+│   └── weather_icon.png
 └── README.md
+
 ```
 
 ---
