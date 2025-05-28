@@ -1,70 +1,127 @@
-# Weather App
+Here's a professional and clear `README.md` for your weather app project using `CustomTkinter` and `weatherapi.com`:
 
-This is a simple weather application built using Tkinter, a GUI toolkit for Python. The app allows users to check the current weather conditions for a given city. It uses the [WeatherAPI](https://www.weatherapi.com/) to fetch real-time weather data.
+---
 
-## Features
+# 🌦️ Weather App (with Air Quality) - CustomTkinter GUI
 
-- **Automatic Location Detection:** By default, the app detects the user's location using their IP address and displays the weather information for that location.
-- **Custom Location Search:** Users can enter a specific city in the entry field and click the "SUBMIT!!" button to get weather information for that city.
-- **Background Images:** The app has a visually appealing background that changes each time the application is launched. The background images are randomly selected from a predefined list.
+This is a sleek, Python-based desktop weather application built using `CustomTkinter`, which displays real-time weather and air quality data for any location using the [WeatherAPI](https://www.weatherapi.com/) service. It features:
 
-## Prerequisites
+* Local weather data based on IP
+* Temperature, wind, humidity, pressure, and condition
+* Air quality readings (PM2.5, PM10, CO, NO₂, O₃, SO₂, Defra Index)
+* Switch between °C and °F
+* API key management via `.env`
+* Local response caching for faster performance
 
-Before running the application, make sure to set up your environment by following these steps:
+---
 
-1. **Get API Key:** Sign up on [WeatherAPI](https://www.weatherapi.com/) to obtain an API key. Add this key to the `.env` file in the project directory.
+## 📸 Screenshot
 
-    ```plaintext
-    api_key=your_weatherapi_key
-    ```
+> *Include a screenshot here of the app UI if available.*
 
-2. **Install Dependencies:** Make sure to install the required Python packages. You can install them using the following command:
-    1. Windows:
-    ```bash
-    pip install -r requirements.txt
-    ```
-    2. Linux/Mac:
-    ```bash
-    pip3 install -r requirements.txt
-    ```
+---
 
-## How to Run
+## 🛠️ Features
 
-1. Clone this repository to your local machine:
+* ✅ **Modern GUI** with `CustomTkinter`
+* ✅ **Auto-location detection** using `ipinfo.io`
+* ✅ **Accurate weather & air quality** from WeatherAPI
+* ✅ **Dynamic AQI coloring** (Low / Moderate / High / Very High)
+* ✅ **Caching system** to reduce API calls (10-minute validity)
+* ✅ **Graceful error handling** for invalid input or network issues
 
-    ```bash
-    git clone https://github.com/kraven000/Tkinter-Weather-GUI.git
-    ```
+---
 
-2. Navigate to the project directory:
+## 📦 Requirements
 
-    ```bash
-    cd Tkinter-Weather-GUI
-    ```
+* Python 3.8+
+* [weatherapi.com](https://www.weatherapi.com/) API Key (Free Tier works)
+* Libraries:
 
-3. Run the application:
-    1. Windows:
-    ```bash
-    python main.py
-    ```
-    2. Linux/Mac:
-    ```bash
-    python3 main.py
-    ```
+  * `customtkinter`
+  * `requests`
+  * `Pillow`
+  * `python-dotenv`
 
-4. The Tkinter window will appear, allowing you to interact with the weather application.
+Install dependencies using:
 
-## Screenshots
+```bash
+pip install customtkinter requests pillow python-dotenv
+```
 
-Include screenshots of the application to give users a visual preview of how the app looks.
+---
 
-## Contributing
+## 🔑 Setup
 
-If you would like to contribute to this project, please open an issue or submit a pull request. We welcome contributions and feedback.
+1. Clone the repository.
+2. Install dependencies.
+3. Run the app once; it will prompt you to enter your name and API key.
+4. Your API key will be saved in a `.env` file for future use.
 
-## Acknowledgments
+Example `.env` file:
 
-- **Tkinter:** Thanks to the Tkinter library for providing the tools to create the graphical user interface.
-- **WeatherAPI:** Special thanks to WeatherAPI for providing accurate and up-to-date weather information.
+```
+API_KEY="your_api_key_here"
+Name="Your Name"
+```
 
-Feel free to customize this README according to your preferences and add any additional information or sections that you find relevant.
+---
+
+## 🚀 Running the App
+
+```bash
+python your_main_file.py
+```
+
+Once launched:
+
+* Type a location and hit Enter to fetch weather and AQI.
+* Or leave it blank to auto-detect your current location.
+
+---
+
+## 🧠 Caching System
+
+* Cache file: `cache.dat`
+* Stores responses for locations with a timestamp.
+* Data is valid for **10 minutes**, then automatically refreshed.
+
+---
+
+## ❌ Error Handling
+
+* If location is invalid or API limit is exceeded:
+
+  * App shows "ERROR" and disables AQI display temporarily.
+* If `.env` is missing or incorrect:
+
+  * App opens a setup window to input a valid API key.
+
+---
+
+## 📁 Folder Structure
+
+```bash
+weather-app/
+├── main.py
+├── .env
+├── cache.dat
+├── png files/
+│   └── information_icon.png
+└── README.md
+```
+
+---
+
+## 📃 License
+
+MIT License – feel free to use, modify, and distribute this app.
+
+---
+
+Let me know if you'd like to include:
+
+* Installation video / demo GIF
+* Setup screenshots
+* Contribution guidelines
+* A more casual tone
