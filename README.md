@@ -1,4 +1,3 @@
-Here's a professional and clear `README.md` for your weather app project using `CustomTkinter` and `weatherapi.com`:
 
 ---
 
@@ -62,7 +61,6 @@ Example `.env` file:
 
 ```
 API_KEY="your_api_key_here"
-Name="Your Name"
 ```
 
 ---

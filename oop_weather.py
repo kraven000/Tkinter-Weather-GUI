@@ -256,7 +256,7 @@ class WeatherApp:
                 showerror(title="Error",message="Please fill all the fields")
             else:
                 with open(".env","w") as file:
-                    file.write(f'API_KEY = "{api_key.get()}"\nName = "{name.get().title()}"')
+                    file.write(f'API_KEY = "{api_key.get()}"')
                 self.window.destroy()
     
         # GUI Icon
