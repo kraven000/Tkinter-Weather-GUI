@@ -117,9 +117,3 @@ MIT License – feel free to use, modify, and distribute this app.
 
 ---
 
-Let me know if you'd like to include:
-
-* Installation video / demo GIF
-* Setup screenshots
-* Contribution guidelines
-* A more casual tone
