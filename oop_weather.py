@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import os
 import time
 import pickle
-import time
 
 
 DEGREE_SYMBOL = u"\u00b0"
@@ -58,7 +57,6 @@ class WeatherApp:
         location = location["city"].lower()
         
         # weather
-        url = None
         cached_data = self.cache_data[location] if location in self.cache_data else None
         if cached_data!=None:
             # if location is cached then get the cached data
