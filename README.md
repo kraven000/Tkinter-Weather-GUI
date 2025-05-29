@@ -100,18 +100,23 @@ Once launched:
 ## 📁 Folder Structure
 
 ```bash
-weather-app/
-├── main.py
-├── .env
-├── cache.dat
-├── png files/
-│   ├── icon.png
-│   ├── information_icon.png
-│   ├── location_icon.png
-│   ├── search_icon.png
-│   └── weather_icon.png
-└── README.md
-
+CUSTOMTKINTER-WEATHER-GUI/
+│
+├── png files/ # Contains GUI icon images
+│ ├── icon.png
+│ ├── information_icon.png
+│ ├── location_icon.png
+│ ├── search_icon.png
+│ └── weather_icon.png
+│
+├── .env # Environment variables (e.g., API key)
+├── .gitignore # Files and folders ignored by Git
+├── cache.dat # Cached weather/air quality data
+├── credits.txt # Credits or acknowledgements
+├── license.txt # License for the project
+├── main.py # Main entry point of the weather app
+├── README.md # Project documentation
+└── requirements.txt # Python dependencies
 ```
 
 ---
