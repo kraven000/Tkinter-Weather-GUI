@@ -1,383 +1,489 @@
-from tkinter import Tk,Label,Entry,Button,Frame,PhotoImage,StringVar
+from customtkinter import CTk,CTkLabel,CTkEntry,CTkButton,CTkFrame,CTkImage,StringVar
+from PIL import Image, ImageTk
 from tkinter.messagebox import showerror
 from requests import get
-from json import loads,dumps
-from pytz import timezone
-from datetime import datetime
+from dotenv import load_dotenv
+import os
+import time
+import pickle
 
-with open("account.json") as f:
-        api_key = loads(f.read())["api_key"]
 
-def weather(events=None):
-    try:
-        if len(store_area.get()) != 0:
-            try:
-                
-                # editing location to make it fit for url
-                location = str(store_area.get()).strip().lower()
-                location = location.replace(" ", "%20")
-                
-                # json file of weather
-                url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=yes").json()
-                del location
-                
-                
-                #time with different timezones
-                time = datetime.now(timezone(url_response["location"]["tz_id"])).strftime("%I:%M %p")
-                
-                
-                # Adding time and 'Current Weather' text
-                time_text.config(text=f"{time} ")
-                current_weather_text.config(text="Current Weather")
-                
-                
-                # degree symbol
-                degree_symbol = u"\u00b0"
-                
-                
-                # changing location and region
-                location_city_region.config(text=f"""{url_response["location"]["name"]}, {url_response["location"]["region"]}, {url_response["location"]["country"]}""")
-                
-                
-                # adding weather in degree celsius
-                weather_show.config(text=f"""{url_response["current"]["temp_c"]}{degree_symbol}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
-                
-                
-                # adding condition            
-                weather_condition.config(text=f"""Feels Like:- {url_response["current"]["feelslike_c"]}{degree_symbol}C""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
-                
-                # if len(str(url_response["current"]["temp_c"]))==3:
-                #     celsius_fahrenhiet_button.place(x=680,y=110)
-                # else:
-                #     celsius_fahrenhiet_button.place(x=690,y=110)
-                
-                
-                # adding the details of bluebox
-                windspeed.config(text=f"""{url_response["current"]["wind_kph"]} km/hr""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                pressure.config(text=f"""{url_response["current"]["pressure_mb"]} mb""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                humidity.config(text=f"""{url_response["current"]["humidity"]}%""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                
-                
-                weather_condition_for_bluerect = str(url_response["current"]["condition"]["text"]).split()
-                
-                if len(weather_condition_for_bluerect)>1:
-                    weather_condition_for_bluerect = weather_condition_for_bluerect[0]+" "+weather_condition_for_bluerect[1]
-                else:
-                    weather_condition_for_bluerect = weather_condition_for_bluerect[0]
-                
-                condition.config(text=f"""{weather_condition_for_bluerect}""",bg="#0066CC",fg="#202020",font="default 16 bold")
-                
-                del weather_condition_for_bluerect
-                
-                air_quality = url_response["current"]["air_quality"]
-                if air_quality["gb-defra-index"]>=1 and air_quality["gb-defra-index"]<4:
-                    background_color = "#80FF00"
-                    quality.config(text="Quality:- Low",bg=background_color)
-                elif air_quality["gb-defra-index"]>=4 and air_quality["gb-defra-index"]<7:
-                    background_color = "#F2D414"
-                    quality.config(text="Quality:- Moderate",bg=background_color)
-                elif air_quality["gb-defra-index"]>=7 and air_quality["gb-defra-index"]<10:
-                    background_color = "#CC0000"
-                    quality.config(text="Quality:- High",bg=background_color)
-                elif air_quality["gb-defra-index"]==10:
-                    background_color = "#99004C"
-                    quality.config(text="AQI:- Very High",bg=background_color)
-                
-                
-                air_quality_frame.config(bg=background_color)
-                aqi_co.config(text=f"""CO:- {air_quality["co"]}""",bg=background_color)
-                aqi_no2.config(text=f"""NO2:- {air_quality["no2"]}""",bg=background_color)
-                aqi_o3.config(text=f"""O3:- {air_quality["o3"]}""",bg=background_color)
-                aqi_so2.config(text=f"""SO2:- {air_quality["so2"]}""",bg=background_color)
-                aqi_pm2_5.config(text=f"""PM 2.5:- {air_quality["pm2_5"]}""",bg=background_color)
-                aqi_pm10.config(text=f"""PM 10:- {air_quality["pm10"]}""",bg=background_color)
-                aqi_gb_defra_index.config(text=f"""GB Defra Index:- {air_quality["gb-defra-index"]}""",bg=background_color)
-                
-                del air_quality
-                return url_response
-            
-            except KeyError:
-                celsius_fahrenhiet_button.place_forget()
-                weather_show.config(text="This Location doesn't Exist",font="Helvetica 30 bold")
-                location_city_region.config(text="ERROR")
-                
-        else:
-            
-            location = get(("https://ipinfo.io/json")).json()
-            location = location["loc"]
-            # weather
-            url = get(f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=yes").json()
-            del location
-            return url
+DEGREE_SYMBOL = u"\u00b0"
+
+class WeatherApp:
+    def __init__(self):
+        load_dotenv()
+        
+        self.cache_data = {}
+        if os.path.exists("cache.dat"):
+            self.check_life_time()
+            self.load_cache()
+        
+        if os.path.exists(".env"):
+            self.API_KEY = os.getenv('API_KEY')
+            self.response = self.default_location()
+        
+        self.window = CTk()
+        self.store_location = StringVar()
+        self.weather_show = CTkLabel(self.window,font=("Helvetica",80),text_color="#FFFFFF",fg_color="#202020")
+        self.location_city_region = CTkLabel(self.window,font=("Helvetica",20),fg_color="#202020",text_color="#FFFFFF")
+        self.weather_condition = CTkLabel(self.window,font=("Consolas",16),fg_color="#202020",text_color="#FFFFFF")
+        self.below_details = CTkFrame(self.window,fg_color="#0066CC",width=1300,height=120)
+        self.windspeed = CTkLabel(self.below_details,fg_color="#0066CC",text_color="#202020",font=("default",30))
+        self.humidity = CTkLabel(self.below_details,fg_color="#0066CC",text_color="#202020",font=("default",30))
+        self.feels_like = CTkLabel(self.below_details,fg_color="#0066CC",text_color="#202020",font=("default",30))
+        self.pressure = CTkLabel(self.below_details,fg_color="#0066CC",text_color="#202020",font=("default",30))
+        self.air_quality_frame = CTkFrame(self.window,width=300,height=280)
+        self.aqi_co = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_no2 = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_o3 = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_so2 = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_pm2_5 = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_pm10 = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.aqi_gb_defra_index = CTkLabel(self.air_quality_frame,font=("Roboto",22),text_color="#FFFFFF")
+        self.celsius_fahrenheit_button = CTkButton(self.window,text=f"{DEGREE_SYMBOL}F",
+                                                font=("Helvetica",80),text_color="#FFFFFF",fg_color="#202020",
+                                                width=2,command=self.fahrenheit)
+        self.quality = CTkLabel(self.air_quality_frame,font=("Roboto",20),text_color="#FFFFFF")
+        
+        self.show_time_widget = CTkLabel(self.window,text="",font=("Helvetica",20),fg_color="#202020",
+                                      text_color="#FFFFFF")
     
-    except:
+    
+    def default_location(self):
+        # self.check_life_time()
         
         location = get(("https://ipinfo.io/json")).json()
-        location = location["loc"]
+        location = location["city"].lower()
+        
         # weather
-        url = get(f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}&aqi=yes").json()
-        del location
-        return url
-
-
-response = weather()
-
-def celsius():
-    '''The function to show weather in Degree Celsius if button is pressed'''
-    
-    response = weather()
-    degree_symbol = u"\u00b0"
-    
-    celsius_fahrenhiet_button.config(text=f"{degree_symbol}F")
-    
-    # celsius_fahrenhiet_button.place(x=710,y=100)
-    # if len(str(response["current"]["temp_c"]))==3:
-    #     celsius_fahrenhiet_button.place(x=680,y=110)
-    # else:
-    #     celsius_fahrenhiet_button.place(x=690,y=110)
-    
-    celsius_fahrenhiet_button.config(command=fahrenhiet,bg="#101010",fg="#FFFFFF")
-    
-    weather_show.config(text=f"""{response["current"]["temp_c"]}{degree_symbol}C /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
-    weather_condition.config(text=f"""Feels Like:- {response["current"]["feelslike_c"]}{degree_symbol}C""",font="Consolas 14 bold",bg="#101010",fg="#FFFFFF")
-
-
-def fahrenhiet():
-    '''The function to show weather in Fahrenhiet when button is pressed'''
-    
-    response = weather()
-    degree_symbol = u"\u00b0"
-    
-    celsius_fahrenhiet_button.config(text=f"{degree_symbol}C")
-    
-    # celsius_fahrenhiet_button.place(x=710,y=100)
-    # if len(str(response["current"]["temp_f"]))==5:
-    #     celsius_fahrenhiet_button.place(x=705,y=110)
-    # else:
-    #     celsius_fahrenhiet_button.place(x=690,y=110)
-    
-    celsius_fahrenhiet_button.config(command=celsius,bg='#101010',fg="#FFFFFF")
-    
-    weather_show.config(text=f"""{response["current"]["temp_f"]}{degree_symbol}F /""",font="Helvetica 60 bold",bg="#101010",fg="#FFFFFF")
-    weather_condition.config(text=f"""Feels Like:- {response["current"]["feelslike_f"]}{degree_symbol}F""",font="Consolas 14 bold",bg="#101010",fg="#FFFFFF")
-
-
-def main():
-    
-    global time_text, current_weather_text, weather_show, store_area, weather_condition, detailed_desc, windspeed, condition, pressure, humidity, celsius_fahrenhiet_button, weather_show,location_city_region,air_quality_frame,aqi_co,aqi_no2,aqi_o3,aqi_pm2_5,aqi_pm10,aqi_gb_defra_index,aqi_so2,quality
+        cached_data = self.cache_data[location] if location in self.cache_data else None
+        if cached_data!=None:
+            # if location is cached then get the cached data
+            self.response = cached_data
+            print("From cache")
+        else:
+            edited_location = location.replace(" ","%20")
+            self.response = get(f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={edited_location}&aqi=yes").json()
+            self.add_cache(edited_location,self.response)
+            print("Not from cache")
     
     
-    # root.iconphoto(True,icon)
-    root = Tk()
-    root.title("Weather App")
-    root.geometry("1220x505")
-    root.resizable(False,False)
-    root.configure(bg="#101010")
     
-    # Images
-    gui_icon = PhotoImage(file="icon.png")
-    weather_icon = PhotoImage(file="weather_icon.png")
-    search_icon = PhotoImage(file="search_icon.png")
-    location_icon = PhotoImage(file="location_icon.png")
-    
-    # Icon
-    root.iconphoto(False,gui_icon)
-    
-    #entry widget
-    store_area = StringVar()
-    entry_widget = Entry(root,textvariable=store_area,width=24,justify="center",background="#404040",foreground="#FFFFFF",border=0,font="Consolas 25 bold")
-    entry_widget.place(x=10,y=10)
-    entry_widget.bind("<Return>",weather)
-    entry_widget.focus()
-    
-    # i am declaring default response as global to avoid calling weather soo many time and only calling it one time
-    # default_response = weather()
-    
-    
-    #button for search
-    Button(root,image=search_icon,bg="#101010",borderwidth=0,border=0,command=weather).place(x=450,y=6)
-    
-    # current weather text to show after user press search button or enter
-    current_weather_text = Label(root,text="Current Weather",font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
-    current_weather_text.place(x=6,y=60)
-    
-    # to show current time when press search button or enter
-    time = datetime.now(timezone(response["location"]["tz_id"])).strftime("%I:%M %p")
-    time_text = Label(root,text=time,font="Helvetica 20 bold",bg="#101010",fg="#FFFFFF")
-    time_text.place(x=6,y=100)
-    
-    # to show city and region
-    Label(image=location_icon,bg="#101010").place(x=520,y=6)
-    
-    location_city_region = Label(root,text=f"""{response["location"]["name"]}, {response["location"]["region"]}, {response["location"]["country"]}""",font="Helvetica 16 bold",bg="#101010",fg="#FFFFFF")
-    location_city_region.place(x=565,y=12)
-    
-    # showing weather icon
-    Label(root,image=weather_icon,bg="#101010").place(x=160,y=100)
-    
-    # showing weather
-    degree_symbol = u"\u00b0"
-    weather_show = Label(root,text=f"""{response["current"]["temp_c"]}{degree_symbol}C /""",font="Helvetica 60 bold",fg="#FFFFFF",bg="#101010")
-    weather_show.place(x=412,y=115)
-    
-    # showing condition
-    weather_condition = Label(root,text=f"""Feels Like:- {response["current"]["feelslike_c"]}{degree_symbol}C""",font="Consolas 12 bold",bg="#101010",fg="#FFFFFF")
-    weather_condition.place(x=422,y=200)
-    
-    # Button to switch between degree celsius and degree fahrenheit
-    celsius_fahrenhiet_button = Button(root,text=f"{degree_symbol}F",font="Helvetica 50 bold",fg="#FFFFFF",
-                                       bg="#101010",border=0,borderwidth=0,width=2,command=fahrenhiet)
-    celsius_fahrenhiet_button.place(x=710,y=100)
-    # if len(str(default_response["current"]["temp_c"]))==3:
-    #     celsius_fahrenhiet_button.place(x=680,y=110)
-    # else:
-    #     celsius_fahrenhiet_button.place(x=705,y=110)
-    
-    
-    # short description
-    # Frame for Background
-    Frame(root,bg="#0066CC",width=1300,height=120).place(x=-10,y=390)
-    
-    # To show Wind Speed, Humidity, Description and Pressure
-    Label(root,text="WIND SPEED                  HUMIDITY                  DESCRIPTION                            PRESSURE",font="Default 18 bold",fg="#FFFFFF",bg="#0066CC",border=0,borderwidth=0).place(x=0,y=400)
-    
-    windspeed = Label(root,text=f"""{response["current"]["wind_kph"]} km/hr""",bg="#0066CC",fg="#202020",font="default 16 bold")
-    windspeed.place(x=5,y=450)
-    
-    humidity = Label(root,text=f"""{response["current"]["humidity"]}%""",bg="#0066CC",fg="#202020",font="default 16 bold")
-    humidity.place(x=318,y=450)
-    
-    condition = Label(root,text=f"""{response["current"]["condition"]["text"]}""",bg="#0066CC",fg="#202020",font="default 16 bold")
-    condition.place(x=590,y=450)
-    
-    pressure = Label(root,text=f"""{response["current"]["pressure_mb"]} mb""",bg="#0066CC",fg="#202020",font="default 16 bold")
-    pressure.place(x=1000,y=450)
-    
-    
-    # To show air quality
-    air_quality_index = response["current"]["air_quality"]["gb-defra-index"]
-    quality_text = None
-    background_color = None
-    if air_quality_index>=1 and air_quality_index<4:
-        background_color = "#80FF00"
-        quality_text = "AQI:- Low"
-        
-    elif air_quality_index>=4 and air_quality_index<7:
-        background_color = "#F2D414"
-        quality_text = "AQI:- Moderate"
-        
-    elif air_quality_index>=7 and air_quality_index<10:
-        background_color = "#CC0000"
-        quality_text = "AQI:- High"
-        
-    elif air_quality_index==10:
-        background_color = "#99004C"
-        quality_text = "AQI:- Very High"
-        
-    
-    
-    air_quality_frame = Frame(root,width=300,height=265,bg=background_color)
-    air_quality_frame.place(x=850,y=50)
-    
-    
-    aqi_co = Label(root,text=f"""CO:- {response["current"]["air_quality"]["co"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_co.place(x=852,y=50)
-    
-    aqi_no2 = Label(root,text=f"""NO2:- {response["current"]["air_quality"]["no2"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_no2.place(x=852,y=80)
-    
-    aqi_o3 = Label(root,text=f"""O3:- {response["current"]["air_quality"]["o3"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_o3.place(x=852,y=110)
-    
-    aqi_so2 = Label(root,text=f"""SO2:- {response["current"]["air_quality"]["so2"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_so2.place(x=852,y=140)
-    
-    aqi_pm2_5 = Label(root,text=f"""PM 2.5:- {response["current"]["air_quality"]["pm2_5"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_pm2_5.place(x=852,y=170)
-    
-    aqi_pm10 = Label(root,text=f"""PM 10:- {response["current"]["air_quality"]["pm10"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_pm10.place(x=852,y=200)
-    
-    aqi_gb_defra_index = Label(root,text=f"""GB Defra Index:- {response["current"]["air_quality"]["gb-defra-index"]}""",font="Roboto 14 bold",bg=background_color)
-    aqi_gb_defra_index.place(x=852,y=230)
-    
-    quality = Label(root,text=quality_text,bg=background_color,font="Roboto 14 bold")
-    quality.place(x=852,y=260)
-    
-    root.mainloop()
-
-
-if __name__=="__main__":
-    try:
-        with open("account.json","r") as f:
-            main()
-        
-        
-    except FileNotFoundError:
-        
-        def account_email():
-            
-            def verify_api():
-                location = get("https://ipinfo.io/json").json()["loc"]
-                check = get(f"https://api.weatherapi.com/v1/current.json?key={store_api_key.get()}&q={location}&aqi=no")
-                
-                if check.status_code==200:
-                    Label(root,text="Verified!!!!",font="Helvetica 14 bold").place(x=680,y=44)
-                    verify_button.config(state="normal")
+    def weather(self,events=None):
+        try:
+            if len(self.store_location.get()) != 0:
+                try:
+                    # editing location to make it fit for url
+                    location = self.store_location.get().strip().lower()
                     
-                else:
-                    showerror(title="API key Issue",message="The api key you have entered is not correct or it is been disabled please check your API key??")
+                    # checking if the location is cached
+                    cached_data = self.cache_data[location] if location in self.cache_data else None
+                    url_response = None
+                    if cached_data is not None:
+                        url_response = cached_data
+                        print("From cache")
+                    else:
+                        # fetching data from API
+                        print("Not from cache")
+                        edited_location = location.replace(" ", "%20")
+                        url_response = get(url=f"https://api.weatherapi.com/v1/current.json?key={self.API_KEY}&q={edited_location}&aqi=yes").json()
+                        self.add_cache(location,url_response)
+                    
+                    
+                    len_of_weather = len(str(url_response['current']['temp_c']))+2
+                    if len_of_weather>6:
+                        self.celsius_fahrenheit_button.place(x=699,y=175)
+                    elif len_of_weather<6:
+                        self.celsius_fahrenheit_button.place(x=635,y=175)
+                    else:
+                        self.celsius_fahrenheit_button.place(x=683,y=175)
+                    
+                    self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
+                    
+                    # changing location and region
+                    self.location_city_region.configure(text=f" {url_response['location']['name']}, {url_response['location']['region']}, {url_response['location']['country']}")
+                    
+                    
+                    # adding weather in degree celsius
+                    self.weather_show.configure(text=f" {url_response['current']['temp_c']}{DEGREE_SYMBOL}C /")
+                    
+                    
+                    # adding condition            
+                    self.weather_condition.configure(text=f"Condition:- {url_response['current']['condition']['text']}")
+                    
+                    
+                    # adding the details of bluebox
+                    self.windspeed.configure(text=f"WIND SPEED\n\n{url_response['current']['wind_kph']} km/hr",)
+                    self.pressure.configure(text=f"PRESSURE\n\n{url_response['current']['pressure_mb']} mb",)
+                    self.humidity.configure(text=f"HUMIDITY\n\n{url_response['current']['humidity']}%",)
+                    self.feels_like.configure(text=f"FEELS LIKE\n\n{url_response['current']['feelslike_c']}{DEGREE_SYMBOL}C",)
+                    
+                    
+                    air_quality = url_response['current']['air_quality']
+                    
+                    background_color = None
+                    quality_text = None
+                    
+                    if air_quality['gb-defra-index']>=1 and air_quality['gb-defra-index']<4:
+                        background_color = "#009900"
+                        quality_text = "Low"
+                    elif air_quality['gb-defra-index']>=4 and air_quality['gb-defra-index']<7:
+                        background_color = "#FF9B00"
+                        quality_text = "Moderate"
+                    elif air_quality['gb-defra-index']>=7 and air_quality['gb-defra-index']<10:
+                        background_color = "#FF0000"
+                        quality_text = "High"
+                    elif air_quality['gb-defra-index']==10:
+                        background_color = "#800080"
+                        quality_text = "Very High"
+                    
+                    self.quality.configure(text=f"AQI:- {quality_text}",fg_color=background_color)
+                    
+                    self.air_quality_frame.configure(fg_color=background_color,)
+                    self.aqi_co.configure(text=f"CO:- {air_quality['co']}",fg_color=background_color)
+                    self.aqi_no2.configure(text=f"NO2:- {air_quality['no2']}",fg_color=background_color)
+                    self.aqi_o3.configure(text=f"O3:- {air_quality['o3']}""",fg_color=background_color)
+                    self.aqi_so2.configure(text=f"SO2:- {air_quality['so2']}",fg_color=background_color)
+                    self.aqi_pm2_5.configure(text=f"PM 2.5:- {air_quality['pm2_5']}",fg_color=background_color)
+                    self.aqi_pm10.configure(text=f"PM 10:- {air_quality['pm10']}",fg_color=background_color)
+                    self.aqi_gb_defra_index.configure(text=f"GB Defra Index:- {air_quality['gb-defra-index']}",
+                                                   fg_color=background_color)
+                    
+                    self.response = url_response
                 
+                except KeyError:
+                    self.celsius_fahrenheit_button.place_forget()
+                    self.location_city_region.configure(text="This Location doesn't Exist")
+                    self.weather_show.configure(text="ERROR")
+                    self.windspeed.configure(text="-")
+                    self.humidity.configure(text="-")
+                    self.feels_like.configure(text="-")
+                    self.pressure.configure(text="-")
+                    
+                    self.air_quality_frame.configure(fg_color="#C3CAC9")
+                    self.aqi_co.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_no2.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_o3.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_so2.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_pm2_5.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_pm10.configure(text="No Data",fg_color="#C3CAC9")
+                    self.aqi_gb_defra_index.configure(text="No Data",fg_color="#C3CAC9")
+                    self.quality.configure(text="No Data",fg_color="#C3CAC9")
+                    
+                    self.weather_condition.configure(text="No Data")
+            
+            else:
+                self.default_location()
+        
+        except Exception as e:
+            self.default_location()
+    
+    
+    def add_cache(self,place,response):
+        '''This function is used to cache the information'''
+        
+        time_data = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
+        
+        with open("cache.dat","ab") as file:
+            response.update({"cache_time":time_data})
+            pickle.dump({place:response},file)
+        
+        self.load_cache()
+    
+    
+    def load_cache(self):
+        '''This function is used to load the cache data'''
+
+        try:
+            with open("cache.dat","rb") as file:
+                while True:
+                    try:
+                        data = pickle.load(file)
+                        self.cache_data.update(data)
+                    except EOFError:
+                        break
+        except FileNotFoundError:
+            return None
+    
+    
+    def check_life_time(self):
+        '''This function is used to check the life time of the cache'''
+        
+        print("Checking cache life time")
+        if os.path.exists("cache.dat"):
+            with open("cache.dat","rb") as file:
+                check_data = []
+                while True:
+                    try:
+                        data = pickle.load(file)
+                        current_time = {"hour":int(time.strftime("%H")),"minute":int(time.strftime("%M"))}
+                        place = list(data.keys())[0]
+                        if (current_time["hour"]-data[place]["cache_time"]["hour"])!=0 or current_time["minute"]-data[place]["cache_time"]["minute"]>=10:
+                            continue
+                        else:
+                            check_data.append(data)
+                    except EOFError:
+                        break
+            
+            with open("cache.dat","wb") as file:
+                for item in check_data:
+                    pickle.dump(item,file)
+                print("Cache is up to date")
+            
+        else:
+            return False
+    
+    
+    def infoui(self):
+        '''It's UI to enter your API Key details'''
+        import webbrowser
+        
+        def verfiy_api():
+            location = get("https://ipinfo.io/json").json()["loc"].lower()
+            check = get(f"https://api.weatherapi.com/v1/current.json?key={api_key.get()}&q={location}&aqi=no")
+            
+            if check.status_code==200:
+                CTkLabel(self.window,text="Verified!!!!",font=("Helvetica",22),text_color="#009900").place(x=635,y=40)
+                submit_button.configure(state="normal")
                 
-            def process():
-                if ".com" not in store_email.get().lower() or "@" not in store_email.get().lower(): 
-                    showerror(title="Email Error",message="I think it is not a valid Email ID??")
-                else:
-                    with open("account.json","w") as f:
-                        info = {"email":store_email.get(),"api_key":store_api_key.get()}
-                        f.write(dumps(info))
-                        root.destroy()
-            
-            # def account_email 
-            root = Tk()
-            root.title("Account Info")
-            root.geometry("850x200")
-            root.resizable(False,False)
-            root.protocol("WM_DELETE_WINDOW",exit)
-            
-            # Email ID
-            Label(root,text="Enter Your Email ID:- ",font="Aerial 16 bold").place(x=2,y=2)
-            store_email = StringVar()
-            Entry(root,textvariable=store_email,width=35).place(x=260,y=4)
-            
-            # API key
-            Label(root,text="Enter Your API Key:- ",font="Aerial 16 bold").place(x=2,y=40)
-            store_api_key = StringVar()
-            Entry(root,textvariable=store_api_key,width=35).place(x=260,y=40)
-            
-            
-            # Important Note
-            Label(root,text="IMPORTANT!! The API Key Should Be Of 'weatherapi.com' other than api will\ncause error.Go to https://www.weatherapi.com/ to get your API key.",font="Roboto 16 bold",fg="#FF0000").place(x=0,y=80)
-            
-            
-            def open_website():
-                '''A function to open website'''
-                import webbrowser
-                webbrowser.open("https://www.weatherapi.com/")
-                
-                
-            # clickable link button
-            Button(root,text="https://www.weatherapi.com/",font="Roboto 15 bold",fg="#004C99",border=0,borderwidth=0,command=open_website).place(x=230,y=105)
-            
-            # Button to verify api key
-            Button(root,text="Verify API key",command=verify_api).place(x=550,y=41)
-            
-            # Button to submit your information
-            verify_button = Button(root,text="Submit!!",command=process,state="disabled")
-            verify_button.place(x=15,y=150)            
-            
-            root.mainloop()
+            else:
+                showerror(title="API key Issue",message="The api key you have entered is not correct or it is been disabled please check your API key??")
         
         
-        account_email()
-        main()
+        def storing_api_key():
+            if len(name.get()) == 0 or len(api_key.get()) == 0:
+                showerror(title="Error",message="Please fill all the fields")
+            else:
+                with open(".env","w") as file:
+                    file.write(f'API_KEY = "{api_key.get()}"')
+                self.window.destroy()
+    
+        # GUI Icon
+        information_icon = ImageTk.PhotoImage(Image.open("png files\\information_icon.png"))
+        
+        self.window.title("Information")
+        self.window.wm_iconbitmap()
+        self.window.iconphoto(False,information_icon)
+        self.window.geometry("850x205")
+        self.window.resizable(False,False)
+        
+        CTkLabel(self.window,text='Name: ',font=("Helvetica",20)).place(x=1,y=1)
+        CTkLabel(self.window,text='API Key: ',font=("Helvetica",20)).place(x=1,y=35)
+        
+        
+        name = StringVar()
+        api_key = StringVar()
+        
+        CTkEntry(self.window,textvariable=name,width=370,font=("Helvetica",20)).place(x=100,y=2)
+        CTkEntry(self.window,textvariable=api_key,width=370,font=("Helvetica",20)).place(x=100,y=35)
+        
+        CTkButton(self.window,text="Verify API Key",font=("Aerial",20),command=verfiy_api).place(x=480,y=35)
+        
+        submit_button = CTkButton(self.window,text="Submit",state="disabled",font=("Aerial",20),command=storing_api_key)
+        submit_button.place(x=2,y=70)
+        
+        CTkLabel(self.window,text="IMPORTANT!! The API Key Should Be Of 'weatherapi.com' other than API\nkey will cause error.Go to https://www.weatherapi.com/ to get your API key.",
+                 font=("Helvetica",25),text_color="#FF0000").place(x=0,y=120)
+        
+        CTkButton(self.window,text="https://www.weatherapi.com/",font=("Roboto",24),text_color="#004C99",
+                  fg_color="transparent",command=lambda :webbrowser.open("https://www.weatherapi.com/")).place(x=285,y=145)
+        
+        self.window.mainloop()
+    
+    
+    def celsius(self):
+        '''The function to show weather in Degree Celsius if button is pressed'''
+        
+        len_of_weather = len(str(self.response['current']['temp_c']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=699,y=175)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=635,y=175)
+        else:
+            self.celsius_fahrenheit_button.place(x=683,y=175)
+        
+        self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
+        self.weather_show.configure(text=f" {self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /")
+        self.feels_like.configure(text=f"FEELS LIKE\n\n{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C")
+    
+    
+    def fahrenheit(self):
+        '''The function to show weather in Fahrenheit when button is pressed'''
+        
+        len_of_weather = len(str(self.response['current']['temp_f']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=708,y=175)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=644,y=175)
+        else:
+            self.celsius_fahrenheit_button.place(x=692,y=175)
+            
+        self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}C",command=self.celsius)
+        self.weather_show.configure(text=f" {self.response['current']['temp_f']}{DEGREE_SYMBOL}F /")
+        self.feels_like.configure(text=f"FEELS LIKE\n\n{self.response['current']['feelslike_f']}{DEGREE_SYMBOL}F")
+    
+    
+    def show_time(self):
+        time_am_pm = time.strftime("%I:%M %p")
+        self.show_time_widget.configure(text=time_am_pm)
+        self.show_time_widget.after(1000,self.show_time)
+        self.show_time_widget.place(x=6,y=100)
+    
+    
+    def mainui(self):
+        '''It's Main UI where you will see weather information and AQI of that particular location'''
+        
+        # to fetch weather and AQI of your current location
+        self.default_location()
+        
+        self.window.title("Weather App")
+        self.window.geometry("1220x505+100+100")
+        self.window.resizable(False,False)
+        self.window.configure(fg_color="#202020")
+        
+        # Images
+        gui_icon = ImageTk.PhotoImage((Image.open("png files\\icon.png")))
+        weather_icon = CTkImage(Image.open("png files\\weather_icon.png"),size=(250,250))
+        search_icon = CTkImage(Image.open("png files\\search_icon.png"),size=(46,46))
+        location_icon = CTkImage(Image.open("png files\\location_icon.png"),size=(46,46))
+        
+        # Window Icon
+        self.window.wm_iconbitmap()
+        self.window.iconphoto(False,gui_icon)
+        
+        #entry widget
+        entry_widget = CTkEntry(self.window,textvariable=self.store_location,width=400,justify="center",
+                                fg_color="#404040",text_color="#FFFFFF",font=("Consolas",30))
+        entry_widget.place(x=10,y=10)
+        entry_widget.bind("<Return>",self.weather)
+        entry_widget.focus()
+        
+        
+        #button for search
+        CTkButton(self.window,text="",image=search_icon,fg_color="#202020",bg_color="transparent",width=50,
+                  command=self.weather).place(x=410,y=6)
+        
+        # current weather text to show after user press search button or enter
+        CTkLabel(self.window,text="Current Weather",font=("Helvetica",20),fg_color="#202020",
+                 text_color="#FFFFFF").place(x=6,y=65)
+        
+        # to show current time when press search button or enter
+        self.show_time()
+        
+        # to show city and region
+        self.location_city_region.place(x=480,y=10)
+        self.location_city_region.configure(text=f" {self.response['location']['name']}, {self.response['location']['region']}, {self.response['location']['country']}",
+                                            image=location_icon,compound="left")
+        
+        # showing weather
+        self.weather_show.place(x=113,y=100)
+        self.weather_show.configure(text=f" {self.response["current"]["temp_c"]}{DEGREE_SYMBOL}C /",
+                                    image=weather_icon,compound="left")
+        
+        # showing condition
+        self.weather_condition.place(x=380,y=260)
+        self.weather_condition.configure(text=f"""Condition:- {self.response['current']['condition']['text']}""")
+        
+        # Button to switch between degree celsius and degree fahrenheit
+        len_of_weather = len(str(self.response['current']['temp_f']))+2
+        if len_of_weather>6:
+            self.celsius_fahrenheit_button.place(x=699,y=175)
+        elif len_of_weather<6:
+            self.celsius_fahrenheit_button.place(x=635,y=175)
+        else:
+            self.celsius_fahrenheit_button.place(x=683,y=175)
+        self.celsius_fahrenheit_button.configure(text=f"{DEGREE_SYMBOL}F",command=self.fahrenheit)
+        
+        
+        # To show Wind Speed, Humidity, Description and Pressure
+        self.below_details.pack(anchor="s",expand=True)
+        self.below_details.pack_propagate(False)
+        
+        
+        self.windspeed.configure(text=f"""WIND SPEED\n\n{self.response['current']['wind_kph']} km/hr""")
+        self.windspeed.pack(side="left",padx=15,pady=0)
+        
+        self.humidity.configure(text=f"""HUMIDITY\n\n{self.response['current']['humidity']}%""")
+        self.humidity.pack(side="left",padx=120,pady=0)
+        
+        self.feels_like.configure(text=f"""FEELS LIKE\n\n{self.response['current']['feelslike_c']}{DEGREE_SYMBOL}C""")
+        self.feels_like.pack(side="left",padx=120,pady=0)
+        
+        self.pressure.configure(text=f"""PRESSURE\n\n{self.response['current']['pressure_mb']} mb""")
+        self.pressure.pack(side="left",padx=15,pady=0)
+        
+        
+        # To show air quality
+        air_quality_index = self.response["current"]["air_quality"]["gb-defra-index"]
+        quality_text = None
+        background_color = None
+        if air_quality_index>=1 and air_quality_index<4:
+            background_color = "#009900"
+            quality_text = "AQI:- Low"
+            
+        elif air_quality_index>=4 and air_quality_index<7:
+            background_color = "#FF9B00"
+            quality_text = "AQI:- Moderate"
+            
+        elif air_quality_index>=7 and air_quality_index<10:
+            background_color = "#FF0000"
+            quality_text = "AQI:- High"
+            
+        elif air_quality_index==10:
+            background_color = "#800080"
+            quality_text = "AQI:- Very High"
+            
+        
+        self.air_quality_frame.configure(fg_color=background_color)
+        self.air_quality_frame.place(x=850,y=53)
+        
+        
+        self.aqi_co.configure(text=f"""CO:- {self.response["current"]["air_quality"]["co"]}""",fg_color=background_color)
+        self.aqi_co.place(x=0,y=5)
+        
+        self.aqi_no2.configure(text=f"""NO2:- {self.response["current"]["air_quality"]["no2"]}""",fg_color=background_color)
+        self.aqi_no2.place(x=0,y=38)
+        
+        
+        self.aqi_o3.place(x=0,y=71)
+        self.aqi_o3.configure(text=f"""O3:- {self.response["current"]["air_quality"]["o3"]}""",fg_color=background_color)
+        
+        self.aqi_so2.place(x=0,y=104)
+        self.aqi_so2.configure(text=f"""SO2:- {self.response["current"]["air_quality"]["so2"]}""",fg_color=background_color)
+        
+        self.aqi_pm2_5.place(x=0,y=137)
+        self.aqi_pm2_5.configure(text=f"""PM 2.5:- {self.response["current"]["air_quality"]["pm2_5"]}""",fg_color=background_color)
+        
+        self.aqi_pm10.place(x=0,y=170)
+        self.aqi_pm10.configure(text=f"""PM 10:- {self.response["current"]["air_quality"]["pm10"]}""",fg_color=background_color)
+        
+        self.aqi_gb_defra_index.place(x=0,y=203)
+        self.aqi_gb_defra_index.configure(text=f"""GB Defra Index:- {self.response["current"]["air_quality"]["gb-defra-index"]}""",fg_color=background_color)
+        
+        self.quality.place(x=0,y=236)
+        self.quality.configure(text=quality_text,fg_color=background_color)
+        
+        self.window.after(600000,self.check_life_time)
+        self.window.after(600000,self.weather)
+        self.window.after(1000,self.show_time)
+        
+        self.window.mainloop()
+    
+    
+    def main_execution(self):
+        
+        if os.path.exists(".env"):
+            self.API_KEY = os.getenv('API_KEY')
+            self.mainui()
+        else:
+            self.infoui()
+            self.__init__()
+            self.mainui()
+    
+    
+if __name__ == '__main__':
+    app = WeatherApp()
+    app.main_execution()
+    
+
