@@ -33,7 +33,7 @@ This is a sleek, Python-based desktop weather application built using `CustomTki
 
 ## 📦 Requirements
 
-* Python 3.8+
+* Python 3.10+
 * [weatherapi.com](https://www.weatherapi.com/) API Key (Free Tier works)
 * Libraries:
 
@@ -45,7 +45,7 @@ This is a sleek, Python-based desktop weather application built using `CustomTki
 Install dependencies using:
 
 ```bash
-pip install customtkinter requests pillow python-dotenv
+pip install -r requirements.txt
 ```
 
 ---
@@ -68,7 +68,7 @@ API_KEY="your_api_key_here"
 ## 🚀 Running the App
 
 ```bash
-python your_main_file.py
+python main.py
 ```
 
 Once launched:
